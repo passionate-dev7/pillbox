@@ -1,0 +1,8 @@
+{
+  "name": "owner checks for pending proposals",
+  "role": "owner",
+  "page": "/c/:caseId",
+  "state": "One pending proposal p1 from the partner.",
+  "messages": [{ "role": "user", "content": "Has my partner proposed anything I need to look at?" }],
+  "expectedCall": [{ "functionName": "get_case", "arguments": {} }]
+}

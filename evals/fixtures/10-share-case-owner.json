@@ -1,0 +1,8 @@
+{
+  "name": "owner asks for the link to send their partner",
+  "role": "owner",
+  "page": "/c/:caseId",
+  "state": "Case just created, partner has not opened it yet.",
+  "messages": [{ "role": "user", "content": "Give me the link to send my partner." }],
+  "expectedCall": [{ "functionName": "share_case", "arguments": {} }]
+}

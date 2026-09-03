@@ -1,0 +1,8 @@
+{
+  "name": "partner leaves a note for the owner",
+  "role": "partner",
+  "page": "/c/:caseId?role=partner",
+  "state": "Case has two items.",
+  "messages": [{ "role": "user", "content": "Tell them: \"I'll follow up with legal tomorrow morning\"." }],
+  "expectedCall": [{ "functionName": "add_note", "arguments": { "text": "I'll follow up with legal tomorrow morning" } }]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "partner proposes a change with a reason",
+  "role": "partner",
+  "page": "/c/:caseId?role=partner",
+  "state": "Case titled \"Q3 renewal for Acme\", one item already on it.",
+  "messages": [{ "role": "user", "content": "Ask them to add \"invite finance\" because they need to sign off before renewal." }],
+  "expectedCall": [
+    {
+      "functionName": "propose_change",
+      "arguments": { "text": "invite finance", "reason": "they need to sign off before renewal" }
+    }
+  ]
+}

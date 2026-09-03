@@ -1,0 +1,8 @@
+{
+  "name": "owner accepts a named pending proposal",
+  "role": "owner",
+  "page": "/c/:caseId",
+  "state": "One pending proposal p1: \"invite finance\", reason \"they need to sign off before renewal\".",
+  "messages": [{ "role": "user", "content": "Accept p1." }],
+  "expectedCall": [{ "functionName": "accept_change", "arguments": { "proposalId": "p1" } }]
+}

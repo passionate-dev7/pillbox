@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+/*
+ * Out of Service reads as transit signage on paper, not as a dashboard.
+ * Every colour here is a meaning: a subway line, an elevator reliability tier,
+ * or the fact that something is out. Nothing is decoration.
+ *
+ * Tokens live in one @theme block. Components reference the semantic name
+ * (bg-paper, text-ink, border-hair, text-tier-unreliable), never a raw hex.
+ */
+
+@theme {
+  /* Type. next/font binds the real families on <html>; see the html rule below. */
+  --font-sans: ui-sans-serif, system-ui, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Surface: warm off-white MTA card stock, near-black ink. Never #fff, never #000. */
+  --color-paper: #f2efe9;
+  --color-paper-sunk: #ece8dc;
+  --color-paper-inset: #e4dfce;
+  --color-ink: #0a0a0a;
+  --color-ink-soft: #4a4a46;
+  --color-ink-subtle: #7a776d;
+  --color-hair: #ddd8c8;
+  --color-hair-strong: #b8b29c;
+
+  /* One accent: MTA signage blue. Interactive only, never body text.
+     MTA orange (#FF6319) is the B/D/F/M bullet and nothing else. */
+  --color-accent: #0039a6;
+  --color-accent-soft: #dce6f5;
+  --color-accent-ink: #002a7a;
+
+  /* Reliability tiers, all AA on the surface (docs/DESIGN.md contrast table). */
+  --color-tier-reliable: #0c6b3d;
+  --color-tier-watch: #8a5a00;
+  --color-tier-unreliable: #a6360f;
+  --color-tier-out: #7a1010;
+  --color-tier-unknown: #4a4a46;
+
+  /* A simulated outage is never mistaken for a real one. */
+  --color-sim: #6c2bd9;
+
+  /* Square corners on panels and chips; 2px only on things you type in or press. */
+  --radius-plate: 0px;
+  --radius-control: 2px;
+}
+
+/*
+ * next/font defines --font-archivo / --font-plex-mono on the element carrying its
+ * className, which is <html>. Binding --font-sans here rather than in :root is the
+ * difference between Archivo and a silent serif fallback.
+ */
+html {
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, Arial, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, Menlo, Consolas, monospace;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-synthesis-weight: none;
+}
+
+@layer base {
+  /* Every figure on this page is read against another figure. Line them up. */
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  /* Station names and route ids: the condensed, tight setting of a platform sign. */
+  .plate {
+    font-stretch: 88%;
+    letter-spacing: -0.02em;
+    font-weight: 650;
+    line-height: 1.02;
+  }
+
+  /* Equipment codes and times: a maintenance tag, not body copy. */
+  .code {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+  }
+
+  /* A column heading on a status board. Used sparingly, never stacked on an h2. */
+  .colhead {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--color-ink-soft);
+  }
+
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Native listbox styled as a departure board rather than an OS widget. */
+  select[size] option {
+    padding: 5px 8px;
+    color: var(--color-ink);
+  }
+  /* Only paint a selection when one exists: an empty picker must not look picked. */
+  select[size]:not([data-empty="true"]) option:checked {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+}
+
+/* A route whose elevator is out is hatched like a closed entrance, not glowing red. */
+.hatched {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0 7px,
+    color-mix(in srgb, var(--color-tier-out) 22%, transparent) 7px 9px
+  );
+}
+
+/* Provenance: a dotted value you can click or tab to for the query behind it. */
+.sourced > summary {
+  cursor: help;
+  list-style: none;
+  text-decoration: underline dotted from-font;
+  text-underline-offset: 3px;
+}
+.sourced > summary::-webkit-details-marker {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "owner files a report through the declarative form",
+  "role": "owner",
+  "page": "/c/:caseId",
+  "state": "Case has three items, no reports yet.",
+  "messages": [{ "role": "user", "content": "File a report: subject \"missing signature\", the PDF came back unsigned." }],
+  "expectedCall": [
+    {
+      "functionName": "report_form",
+      "arguments": { "subject": "missing signature", "description": "the PDF came back unsigned" }
+    }
+  ],
+  "notes": "report_form is declarative: the browser synthesises this schema from the form's toolparamdescription attributes, and filling it focuses the submit button rather than sending on its own."
+}
