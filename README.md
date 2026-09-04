@@ -78,7 +78,7 @@ committed, versioned index:
 - Drug labels: `https://api.fda.gov/drug/label.json?search=openfda.generic_name:<generic>`
 - Enforcement/recalls: `https://api.fda.gov/drug/enforcement.json?search=openfda.generic_name:<generic>`
 
-The seed set is documented in `docs/BUILD-CONTRACT.md` (>= 60 common geriatric generics: statins,
+The seed set is listed in `scripts/build-index.ts` (>= 60 common geriatric generics: statins,
 anticoagulants, fluoroquinolones, SSRIs, ACE inhibitors, beta blockers, and more), one label per
 generic, sentence-split by section (`drug_interactions`, `warnings`, `boxed_warning`,
 `contraindications`). Every derived interaction flag, geriatric note, and recall carries the
