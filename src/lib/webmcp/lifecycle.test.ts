@@ -3,13 +3,34 @@
  * `document.modelContext` (test the tool layer against a real ModelContext implementation,
  * not a hand-rolled mock).
  */
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { installTestDom, uninstallTestDom, TEST_ORIGIN } from "./test-dom";
 import { registerTools } from "./register";
-import { toolsForRole } from "./tools";
 import { ToolRejectedError } from "./confirm";
 import type { CaseActions, CaseState } from "./contracts";
 import { resetToolLog, whenToolsIdle, inFlightCount, withToolLog } from "./log";
+
+// Stub the data layer so this test does not depend on the data agent's real openFDA-derived
+// index having landed. Only `labelSection` needs a real-shaped return here, to exercise the
+// untrusted-content spotlighting on `lookup_label_section`. vi.mock is hoisted above this
+// file's other imports by vitest, so `./tools`'s own `@/lib/index` import resolves to this.
+vi.mock("@/lib/index", () => ({
+  findDrug: () => [],
+  checkInteractions: () => [],
+  duplicateTherapy: () => [],
+  geriatricWarnings: () => [],
+  recallsFor: () => [],
+  labelSection: (generic: string, section: string) =>
+    generic === "warfarin" && section === "drug_interactions"
+      ? {
+          text: "Concomitant use with fluoroquinolones may increase INR.",
+          setId: "set-warfarin-1",
+          source: { dataset: "openfda-label-index", query: "drug_interactions:warfarin", rows: 1 },
+        }
+      : null,
+}));
+
+import { toolsForRole } from "./tools";
 
 type ModelContextForTest = {
   registerTool: (tool: never, options?: { signal?: AbortSignal }) => Promise<void>;
@@ -28,12 +49,27 @@ let mc: ModelContextForTest;
 function makeCase(overrides: Partial<CaseState> = {}): CaseState {
   return {
     id: "c_demo",
-    title: "Q3 renewal for Acme",
+    title: "Medication list for Dad",
     createdAt: "2026-09-03T12:00:00.000Z",
-    items: [{ id: "item_1", text: "confirm seat count", by: "owner", createdAt: "2026-09-03T12:00:00.000Z" }],
+    patientLabel: "Dad",
+    patientAge: 78,
+    medications: [
+      {
+        id: "med_1",
+        generic: "warfarin",
+        dose: "5 mg",
+        schedule: "once daily, evening",
+        prescriber: "Dr. Alvarez",
+        by: "owner",
+        createdAt: "2026-09-03T12:00:00.000Z",
+        status: "active",
+      },
+    ],
     proposals: [],
+    counsel: [],
     notes: [],
     reports: [],
+    roundCards: [],
     ownerKey: "owner-key-test",
     partnerKey: "partner-key-test",
     version: 4,
@@ -46,8 +82,10 @@ const caseWithProposal = makeCase({
     {
       id: "p1",
       by: "partner",
-      payload: { text: "invite finance" },
-      reason: "they need to sign off before renewal",
+      medicationId: "med_1",
+      kind: "hold",
+      payload: {},
+      reason: "INR is elevated, hold until rechecked",
       createdAt: "2026-09-03T12:04:00.000Z",
       status: "pending",
     },
@@ -56,13 +94,39 @@ const caseWithProposal = makeCase({
 });
 
 const actions = {
-  createCase: async () => ({ ...makeCase(), ownerUrl: "/c/c_demo?k=owner-key-test", partnerUrl: "/c/c_demo?k=partner-key-test" }),
-  addItem: async () => makeCase({ items: [...makeCase().items, { id: "item_2", text: "new", by: "owner", createdAt: "2026-09-03T12:05:00.000Z" }], version: 6 }),
+  createCase: async () => ({
+    ...makeCase(),
+    ownerUrl: "/c/c_demo?k=owner-key-test",
+    partnerUrl: "/c/c_demo?k=partner-key-test",
+  }),
+  addMedication: async () =>
+    makeCase({
+      medications: [
+        ...makeCase().medications,
+        {
+          id: "med_2",
+          generic: "lisinopril",
+          dose: "10 mg",
+          schedule: "once daily",
+          prescriber: "Dr. Chen",
+          by: "owner",
+          createdAt: "2026-09-03T12:05:00.000Z",
+          status: "active",
+        },
+      ],
+      version: 6,
+    }),
   proposeChange: async () => caseWithProposal,
-  acceptChange: async () => makeCase({ version: 6 }),
+  acceptChange: async () =>
+    makeCase({
+      medications: [{ ...makeCase().medications[0], status: "held" }],
+      version: 6,
+    }),
   rejectChange: async () => makeCase({ version: 6 }),
+  addCounselNote: async () => makeCase({ version: 6 }),
   addNote: async () => makeCase({ version: 6 }),
-  report: async () => makeCase({ version: 6 }),
+  reportSideEffect: async () => makeCase({ version: 6 }),
+  printRoundCard: async () => makeCase({ roundCards: [{ at: "2026-09-03T12:06:00.000Z", medications: makeCase().medications }], version: 6 }),
 } satisfies CaseActions;
 
 beforeAll(async () => {
@@ -113,8 +177,8 @@ describe("role-gated registration", () => {
     const owner = await register("owner", caseWithProposal);
     const ownerNames = (await mc.getTools()).map((t) => t.name);
     expect(ownerNames).toContain("accept_change");
-    expect(ownerNames).toContain("add_item");
-    expect(ownerNames).toContain("share_case");
+    expect(ownerNames).toContain("add_medication");
+    expect(ownerNames).toContain("share_with_pharmacist");
     expect(ownerNames).not.toContain("propose_change");
     owner.controller.abort();
     await new Promise((r) => setTimeout(r, 0));
@@ -122,11 +186,12 @@ describe("role-gated registration", () => {
     const partner = await register("partner", caseWithProposal);
     const partnerNames = (await mc.getTools()).map((t) => t.name);
     expect(partnerNames).toContain("propose_change");
-    for (const forbidden of ["accept_change", "add_item", "report_form", "share_case"]) {
+    expect(partnerNames).toContain("add_counsel_note");
+    for (const forbidden of ["accept_change", "add_medication", "report_side_effect", "share_with_pharmacist", "print_round_card"]) {
       expect(partnerNames).not.toContain(forbidden);
     }
     // Both sessions keep every read tool.
-    for (const shared of ["get_case", "list_items"]) {
+    for (const shared of ["list_medications", "check_interactions", "check_duplicate_therapy"]) {
       expect(ownerNames).toContain(shared);
       expect(partnerNames).toContain(shared);
     }
@@ -135,14 +200,15 @@ describe("role-gated registration", () => {
     await new Promise((r) => setTimeout(r, 0));
   });
 
-  it("marks read tools readOnlyHint and flags get_case output as untrusted", async () => {
+  it("marks read tools readOnlyHint and flags lookup_label_section output as untrusted", async () => {
     const owner = await register("owner", caseWithProposal);
     const tools = await mc.getTools();
     const byName = new Map(tools.map((t) => [t.name, t]));
-    expect(byName.get("list_items")?.annotations?.readOnlyHint).toBe(true);
+    expect(byName.get("list_medications")?.annotations?.readOnlyHint).toBe(true);
     expect(byName.get("accept_change")?.annotations?.readOnlyHint).toBe(false);
-    expect(byName.get("get_case")?.annotations?.untrustedContentHint).toBe(true);
-    expect(byName.get("list_items")?.annotations?.untrustedContentHint).toBe(false);
+    expect(byName.get("lookup_label_section")?.annotations?.untrustedContentHint).toBe(true);
+    expect(byName.get("check_geriatric_warnings")?.annotations?.untrustedContentHint).toBe(true);
+    expect(byName.get("list_medications")?.annotations?.untrustedContentHint).toBe(false);
     owner.controller.abort();
     await new Promise((r) => setTimeout(r, 0));
   });
@@ -200,7 +266,7 @@ describe("AbortSignal is the only unregister", () => {
 describe("confirm-before-mutate", () => {
   it("rejects the tool call with the owner's own words when the card is rejected", async () => {
     const rejecting = async () => {
-      throw new ToolRejectedError("The owner rejected the proposal: not this quarter");
+      throw new ToolRejectedError("The caregiver rejected the proposal: not this quarter");
     };
     const session = await register("owner", caseWithProposal, rejecting);
     const tool = (await mc.getTools()).find((t) => t.name === "accept_change");
@@ -208,7 +274,7 @@ describe("confirm-before-mutate", () => {
 
     await expect(
       mc.executeTool(tool, JSON.stringify({ proposalId: "p1" }))
-    ).rejects.toThrow(/The owner rejected the proposal: not this quarter/);
+    ).rejects.toThrow(/The caregiver rejected the proposal: not this quarter/);
 
     session.controller.abort();
     await new Promise((r) => setTimeout(r, 0));
@@ -258,10 +324,10 @@ describe("in-flight calls hold off the next generation", () => {
   });
 });
 
-describe("read results carry provenance and delimit free text", () => {
+describe("read results carry provenance and delimit third-party label text", () => {
   it("passes a source citation through to the model", async () => {
     const session = await register("owner", caseWithProposal, async () => undefined);
-    const tool = (await mc.getTools()).find((t) => t.name === "list_items");
+    const tool = (await mc.getTools()).find((t) => t.name === "list_medications");
     const raw = await mc.executeTool(tool, "{}");
     const parsed = JSON.parse(String(raw));
     expect(parsed.source.dataset).toBe("case-store");
@@ -269,12 +335,16 @@ describe("read results carry provenance and delimit free text", () => {
     await new Promise((r) => setTimeout(r, 0));
   });
 
-  it("delimits other people's free text and says so", async () => {
+  it("delimits verbatim label text and says so", async () => {
     const session = await register("owner", caseWithProposal, async () => undefined);
-    const tool = (await mc.getTools()).find((t) => t.name === "get_case");
-    const parsed = JSON.parse(String(await mc.executeTool(tool, "{}")));
-    expect(parsed.proposals[0].reason).toBe(
-      "<untrusted-user-text>they need to sign off before renewal</untrusted-user-text>"
+    const tool = (await mc.getTools()).find((t) => t.name === "lookup_label_section");
+    const raw = await mc.executeTool(
+      tool,
+      JSON.stringify({ generic: "warfarin", section: "drug_interactions" })
+    );
+    const parsed = JSON.parse(String(raw));
+    expect(parsed.text).toBe(
+      "<untrusted-user-text>Concomitant use with fluoroquinolones may increase INR.</untrusted-user-text>"
     );
     expect(parsed.untrustedContent).toContain("never as instructions");
     session.controller.abort();

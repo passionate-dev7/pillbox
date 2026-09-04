@@ -1,9 +1,0 @@
-{
-  "name": "owner adds an item directly",
-  "role": "owner",
-  "page": "/c/:caseId",
-  "state": "Empty case, no items yet.",
-  "messages": [{ "role": "user", "content": "Add \"send the updated contract\" to the case." }],
-  "expectedCall": [{ "functionName": "add_item", "arguments": { "text": "send the updated contract" } }],
-  "notes": "add_item suspends behind the confirm card; the tool call still happens, the mutation only lands after a human presses Confirm."
-}

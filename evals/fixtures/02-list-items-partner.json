@@ -1,8 +1,0 @@
-{
-  "name": "partner asks what has been added",
-  "role": "partner",
-  "page": "/c/:caseId?role=partner",
-  "state": "Partner has just opened the link.",
-  "messages": [{ "role": "user", "content": "What items are already on here?" }],
-  "expectedCall": [{ "functionName": "list_items", "arguments": {} }]
-}

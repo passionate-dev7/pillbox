@@ -1,0 +1,8 @@
+{
+  "name": "caregiver asks what is on the list",
+  "role": "owner",
+  "page": "/c/:caseId?role=owner",
+  "state": "Case for patient \"Dad\", age 78, eleven medications, four prescribers.",
+  "messages": [{ "role": "user", "content": "What medications is he on right now?" }],
+  "expectedCall": [{ "functionName": "list_medications", "arguments": {} }]
+}

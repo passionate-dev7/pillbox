@@ -1,0 +1,10 @@
+{
+  "name": "pharmacist checks geriatric warnings before dispensing",
+  "role": "partner",
+  "page": "/c/:caseId?role=partner",
+  "state": "Case for patient \"Dad\", age 78, gabapentin on the active list.",
+  "messages": [{ "role": "user", "content": "Any geriatric-specific warnings on gabapentin I should flag?" }],
+  "expectedCall": [
+    { "functionName": "check_geriatric_warnings", "arguments": { "generic": "gabapentin" } }
+  ]
+}

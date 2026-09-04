@@ -1,0 +1,20 @@
+{
+  "name": "caregiver adds a new medication directly",
+  "role": "owner",
+  "page": "/c/:caseId?role=owner",
+  "state": "Case for patient \"Dad\", age 78, eleven medications on the active list.",
+  "messages": [
+    { "role": "user", "content": "Add acetaminophen 500 mg, twice daily as needed, prescribed by Dr. Nakamura." }
+  ],
+  "expectedCall": [
+    {
+      "functionName": "add_medication",
+      "arguments": {
+        "generic": "acetaminophen",
+        "dose": "500 mg",
+        "schedule": "twice daily as needed",
+        "prescriber": "Dr. Nakamura"
+      }
+    }
+  ]
+}

@@ -1,8 +1,0 @@
-{
-  "name": "owner leaves a note for the partner",
-  "role": "owner",
-  "page": "/c/:caseId",
-  "state": "Case has two items, no notes yet.",
-  "messages": [{ "role": "user", "content": "Leave a note: \"signed version is in the shared drive now\"." }],
-  "expectedCall": [{ "functionName": "add_note", "arguments": { "text": "signed version is in the shared drive now" } }]
-}

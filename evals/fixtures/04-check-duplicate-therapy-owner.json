@@ -1,0 +1,8 @@
+{
+  "name": "caregiver asks about duplicate therapy",
+  "role": "owner",
+  "page": "/c/:caseId?role=owner",
+  "state": "Case for patient \"Dad\", age 78, atorvastatin on the active list.",
+  "messages": [{ "role": "user", "content": "Is he on two statins by any chance?" }],
+  "expectedCall": [{ "functionName": "check_duplicate_therapy", "arguments": {} }]
+}

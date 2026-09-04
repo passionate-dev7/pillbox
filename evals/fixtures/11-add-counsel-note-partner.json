@@ -1,0 +1,15 @@
+{
+  "name": "pharmacist leaves a counseling note",
+  "role": "partner",
+  "page": "/c/:caseId?role=partner",
+  "state": "Case for patient \"Dad\", age 78.",
+  "messages": [
+    { "role": "user", "content": "Note for the family: take omeprazole 30 minutes before breakfast, not with it." }
+  ],
+  "expectedCall": [
+    {
+      "functionName": "add_counsel_note",
+      "arguments": { "text": "Take omeprazole 30 minutes before breakfast, not with it." }
+    }
+  ]
+}

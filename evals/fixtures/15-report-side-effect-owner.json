@@ -1,0 +1,15 @@
+{
+  "name": "caregiver fills a side-effect form",
+  "role": "owner",
+  "page": "/c/:caseId?role=owner",
+  "state": "Case for patient \"Dad\", age 78, metoprolol on the active list.",
+  "messages": [
+    { "role": "user", "content": "He's been dizzy since starting the metoprolol two days ago, feels moderate." }
+  ],
+  "expectedCall": [
+    {
+      "functionName": "report_side_effect",
+      "arguments": { "description": "Dizziness since starting metoprolol.", "onset": "two days ago", "severity": "moderate" }
+    }
+  ]
+}

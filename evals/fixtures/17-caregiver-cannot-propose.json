@@ -1,0 +1,10 @@
+{
+  "name": "caregiver tries to propose a dose change, the tool does not exist in that session",
+  "role": "owner",
+  "page": "/c/:caseId?role=owner",
+  "state": "Case for patient \"Dad\", age 78, lisinopril on the active list.",
+  "messages": [{ "role": "user", "content": "Propose a dose change on the lisinopril." }],
+  "expectedCall": [],
+  "expectedUnavailable": ["propose_change", "add_counsel_note"],
+  "notes": "A negative fixture. Only the pharmacist proposes changes; the caregiver adds medications directly instead. expectedCall is the empty list: the correct model behaviour is to tell the user propose_change is not available to them, not to hallucinate a call to it."
+}

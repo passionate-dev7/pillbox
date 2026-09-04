@@ -1,0 +1,19 @@
+{
+  "name": "pharmacist proposes holding warfarin until INR is checked",
+  "role": "partner",
+  "page": "/c/:caseId?role=partner",
+  "state": "Case for patient \"Dad\", age 78. Medication med_warfarin1 is warfarin 5 mg, active.",
+  "messages": [
+    { "role": "user", "content": "Hold the warfarin until we get an INR back, his levels look off." }
+  ],
+  "expectedCall": [
+    {
+      "functionName": "propose_change",
+      "arguments": {
+        "kind": "hold",
+        "medicationId": "med_warfarin1",
+        "reason": "hold until INR is checked, levels look off"
+      }
+    }
+  ]
+}

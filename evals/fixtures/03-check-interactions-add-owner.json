@@ -1,0 +1,10 @@
+{
+  "name": "caregiver reports a new drug started outside the app",
+  "role": "owner",
+  "page": "/c/:caseId?role=owner",
+  "state": "Case for patient \"Dad\", age 78, warfarin is on the active list.",
+  "messages": [{ "role": "user", "content": "He started ciprofloxacin yesterday." }],
+  "expectedCall": [
+    { "functionName": "check_interactions", "arguments": { "add": "ciprofloxacin" } }
+  ]
+}

@@ -31,12 +31,12 @@ is part of what is being evaluated.
 
 ## The negative fixture: a partner trying to accept
 
-`fixtures/12-partner-cannot-accept.json` is the asymmetry the whole template turns on, so it
+`fixtures/16-partner-cannot-accept.json` is the asymmetry the whole template turns on, so it
 is an eval and not just a code comment. It is expressed as:
 
 - `"expectedCall": []` : the correct behaviour is **no tool call at all**. The model should tell
   the user that only the owner can accept, because nothing in its tool list can do it.
-- `"expectedUnavailable": ["accept_change", "add_item", "share_case", "report_form"]` :
+- `"expectedUnavailable": ["accept_change", "add_medication", "share_with_pharmacist", "print_round_card", "report_side_effect"]` :
   asserted deterministically by `evals.test.ts` against `isAllowed("partner", name)`, so a
   regression that leaks an owner-only tool into a partner session turns this fixture red without
   needing a model run.
@@ -87,7 +87,7 @@ object throws `UnknownError: Failed to parse input arguments`):
 
 ```js
 const tools = await document.modelContext.getTools();
-const tool = tools.find(t => t.name === 'list_items');
+const tool = tools.find(t => t.name === 'list_medications');
 await document.modelContext.executeTool(tool, JSON.stringify({}));
 ```
 
@@ -97,7 +97,7 @@ Chrome's taxonomy, and which fixture covers each:
 
 | failure mode | fixture |
 |---|---|
-| wrong tool chosen | `01`/`02-list-items` (list, do not re-fetch the whole case), `10-share-case` |
-| right tool, wrong arguments | `06-propose-change-partner` (two constraints stated in one sentence) |
-| output wrong for the next step | `04-get-case-owner` (must return proposals, not just items) |
-| tool not exposed in this state | `12-partner-cannot-accept` |
+| wrong tool chosen | `01`/`02-list-medications` (list, do not re-check interactions), `13-share-with-pharmacist` |
+| right tool, wrong arguments | `09-propose-change-hold-partner` (medicationId, kind and reason stated in one sentence) |
+| output wrong for the next step | `01-list-medications-owner` (must return status and prescriber, not just names) |
+| tool not exposed in this state | `16-partner-cannot-accept` |

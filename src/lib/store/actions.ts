@@ -1,4 +1,4 @@
-import type { CaseActionType, CaseState, Proposal, Role, TimelineEvent } from "@/lib/types";
+import type { CaseActionType, CaseState, ChangeProposal, Role, TimelineEvent } from "@/lib/types";
 import { getCase, putCase, StaleWriteError } from "./index";
 
 export class RoleError extends Error {
@@ -18,17 +18,27 @@ export class ActionError extends Error {
   }
 }
 
-const OWNER_ONLY: CaseActionType[] = ["add_item", "accept_change", "report"];
-const PARTNER_ONLY: CaseActionType[] = ["propose_change"];
+const OWNER_ONLY: CaseActionType[] = [
+  "add_medication",
+  "accept_change",
+  "report_side_effect",
+  "print_round_card",
+];
+const PARTNER_ONLY: CaseActionType[] = ["propose_change", "add_counsel_note"];
 
 /**
  * Free-text ceilings. Crossing one is a 400 with the actual and allowed length in the message,
  * not a silent `.slice()` that drops the tail of what someone typed with no signal it happened.
  */
-const ITEM_MAX = 200;
+const GENERIC_MAX = 80;
+const DOSE_MAX = 40;
+const SCHEDULE_MAX = 80;
+const PRESCRIBER_MAX = 80;
 const NOTE_MAX = 500;
+const COUNSEL_MAX = 500;
 const REPORT_DESCRIPTION_MAX = 1000;
-const REPORT_SUBJECT_MAX = 120;
+const REPORT_SEVERITY_MAX = 40;
+const REPORT_ONSET_MAX = 80;
 const PROPOSAL_REASON_MAX = 500;
 
 function requireWithinLength(field: string, value: string, max: number): void {
@@ -55,12 +65,12 @@ export function roleForKey(caseState: CaseState, key: string): Role | null {
 export function assertRole(type: CaseActionType, role: Role): void {
   if (OWNER_ONLY.includes(type) && role !== "owner") {
     throw new RoleError(
-      `Only the owner can ${type.replace(/_/g, " ")}. You are the partner: propose a change instead and the owner confirms it.`,
+      `Only the caregiver can ${type.replace(/_/g, " ")}. You are the pharmacist: propose a change instead and the caregiver confirms it.`,
     );
   }
   if (PARTNER_ONLY.includes(type) && role !== "partner") {
     throw new RoleError(
-      `Only the partner can ${type.replace(/_/g, " ")}. You are the owner: accept or reject the proposals you already have.`,
+      `Only the pharmacist can ${type.replace(/_/g, " ")}. You are the caregiver: accept or reject the proposals you already have.`,
     );
   }
 }
@@ -75,43 +85,115 @@ function id(prefix: string): string {
 
 type Payload = Record<string, unknown>;
 
+function findMedication(caseState: CaseState, medicationId: string) {
+  const med = caseState.medications.find((m) => m.id === medicationId);
+  if (!med) {
+    throw new ActionError(
+      `No medication with id "${medicationId}". Active medications: ${caseState.medications
+        .filter((m) => m.status === "active")
+        .map((m) => `${m.id} (${m.generic})`)
+        .join(", ") || "none"}.`,
+    );
+  }
+  return med;
+}
+
 function mutate(caseState: CaseState, type: CaseActionType, role: Role, payload: Payload): CaseState {
   const next: CaseState = {
     ...caseState,
-    items: [...caseState.items],
+    medications: [...caseState.medications],
     proposals: [...caseState.proposals],
+    counsel: [...caseState.counsel],
     notes: [...caseState.notes],
     reports: [...caseState.reports],
+    roundCards: [...caseState.roundCards],
     version: caseState.version + 1,
   };
 
   switch (type) {
-    case "add_item": {
-      const text = String(payload.text ?? "").trim();
-      if (!text) throw new ActionError("add_item needs some text.");
-      requireWithinLength("item text", text, ITEM_MAX);
-      next.items.push({ id: id("item"), text, by: role, createdAt: new Date().toISOString() });
-      next.notes.push(event(role, "add_item", `${role} added: ${text}`));
+    case "add_medication": {
+      const generic = String(payload.generic ?? "").trim().toLowerCase();
+      const dose = String(payload.dose ?? "").trim();
+      const schedule = String(payload.schedule ?? "").trim();
+      const prescriber = String(payload.prescriber ?? "").trim();
+      if (!generic) throw new ActionError("add_medication needs a generic drug name.");
+      if (!dose) throw new ActionError("add_medication needs a dose.");
+      if (!schedule) throw new ActionError("add_medication needs a schedule.");
+      if (!prescriber) throw new ActionError("add_medication needs the prescriber.");
+      requireWithinLength("generic name", generic, GENERIC_MAX);
+      requireWithinLength("dose", dose, DOSE_MAX);
+      requireWithinLength("schedule", schedule, SCHEDULE_MAX);
+      requireWithinLength("prescriber", prescriber, PRESCRIBER_MAX);
+      next.medications.push({
+        id: id("med"),
+        generic,
+        dose,
+        schedule,
+        prescriber,
+        by: role,
+        createdAt: new Date().toISOString(),
+        status: "active",
+      });
+      next.notes.push(event(role, "add_medication", `${role} added ${generic} ${dose} (${prescriber})`));
       return next;
     }
 
     case "propose_change": {
-      const text = String(payload.text ?? "").trim();
-      if (!text) throw new ActionError("propose_change needs the text of the change you are proposing.");
-      requireWithinLength("proposed text", text, ITEM_MAX);
+      const kind = String(payload.kind ?? "");
+      const allowedKinds = ["hold", "dose", "time", "substitute", "stop", "add"];
+      if (!allowedKinds.includes(kind)) {
+        throw new ActionError(`propose_change kind must be one of: ${allowedKinds.join(", ")}.`);
+      }
       const reason = String(payload.reason ?? "").trim();
-      if (!reason) throw new ActionError("propose_change needs a reason the owner can read.");
+      if (!reason) throw new ActionError("propose_change needs a reason the caregiver can read.");
       requireWithinLength("reason", reason, PROPOSAL_REASON_MAX);
-      const proposal: Proposal = {
+      const medicationId = payload.medicationId ? String(payload.medicationId) : undefined;
+      if (kind !== "add" && !medicationId) {
+        throw new ActionError(`propose_change kind "${kind}" needs a medicationId.`);
+      }
+      if (medicationId) findMedication(next, medicationId);
+      const changePayload: Record<string, unknown> = {};
+      if (kind === "dose") {
+        const dose = String(payload.dose ?? "").trim();
+        if (!dose) throw new ActionError('propose_change kind "dose" needs a payload.dose.');
+        requireWithinLength("dose", dose, DOSE_MAX);
+        changePayload.dose = dose;
+      } else if (kind === "time") {
+        const schedule = String(payload.schedule ?? "").trim();
+        if (!schedule) throw new ActionError('propose_change kind "time" needs a payload.schedule.');
+        requireWithinLength("schedule", schedule, SCHEDULE_MAX);
+        changePayload.schedule = schedule;
+      } else if (kind === "substitute" || kind === "add") {
+        const generic = String(payload.generic ?? "").trim().toLowerCase();
+        const dose = String(payload.dose ?? "").trim();
+        const schedule = String(payload.schedule ?? "").trim();
+        const prescriber = String(payload.prescriber ?? "").trim();
+        if (!generic || !dose || !schedule || !prescriber) {
+          throw new ActionError(
+            `propose_change kind "${kind}" needs generic, dose, schedule and prescriber.`,
+          );
+        }
+        requireWithinLength("generic name", generic, GENERIC_MAX);
+        requireWithinLength("dose", dose, DOSE_MAX);
+        requireWithinLength("schedule", schedule, SCHEDULE_MAX);
+        requireWithinLength("prescriber", prescriber, PRESCRIBER_MAX);
+        changePayload.generic = generic;
+        changePayload.dose = dose;
+        changePayload.schedule = schedule;
+        changePayload.prescriber = prescriber;
+      }
+      const proposal: ChangeProposal = {
         id: id("p"),
         by: "partner",
-        payload: { text },
+        medicationId,
+        kind: kind as ChangeProposal["kind"],
+        payload: changePayload,
         reason,
         createdAt: new Date().toISOString(),
         status: "pending",
       };
       next.proposals.push(proposal);
-      next.notes.push(event(role, "propose_change", `Partner proposed: ${text} (${reason})`));
+      next.notes.push(event(role, "propose_change", `Pharmacist proposed ${kind}: ${reason}`));
       return next;
     }
 
@@ -133,14 +215,21 @@ function mutate(caseState: CaseState, type: CaseActionType, role: Role, payload:
           : p,
       );
       if (decision === "accept") {
-        const text = String(proposal.payload.text ?? "").trim();
-        if (text) {
-          next.items.push({ id: id("item"), text, by: "partner", createdAt: new Date().toISOString() });
-        }
-        next.notes.push(event(role, "accept_change", `Owner accepted the proposal: ${proposal.reason}`));
+        applyProposal(next, proposal);
+        next.notes.push(event(role, "accept_change", `Caregiver accepted the ${proposal.kind} proposal: ${proposal.reason}`));
       } else {
-        next.notes.push(event(role, "reject_change", `Owner rejected the proposal: ${proposal.reason}`));
+        next.notes.push(event(role, "reject_change", `Caregiver rejected the ${proposal.kind} proposal: ${proposal.reason}`));
       }
+      return next;
+    }
+
+    case "add_counsel_note": {
+      const text = String(payload.text ?? "").trim();
+      if (!text) throw new ActionError("A counsel note needs some text.");
+      requireWithinLength("counsel note", text, COUNSEL_MAX);
+      const counselNote = event(role, "counsel", text);
+      next.counsel.push(counselNote);
+      next.notes.push(counselNote);
       return next;
     }
 
@@ -152,16 +241,100 @@ function mutate(caseState: CaseState, type: CaseActionType, role: Role, payload:
       return next;
     }
 
-    case "report": {
-      const subject = String(payload.subject ?? "").trim();
+    case "report_side_effect": {
       const description = String(payload.description ?? "").trim();
-      if (!subject) throw new ActionError("A report needs a subject line.");
-      if (!description) throw new ActionError("A report needs a description.");
-      requireWithinLength("subject", subject, REPORT_SUBJECT_MAX);
+      const onset = String(payload.onset ?? "").trim();
+      const severity = String(payload.severity ?? "").trim();
+      const medicationId = payload.medicationId ? String(payload.medicationId) : undefined;
+      if (!description) throw new ActionError("A side-effect report needs a description.");
+      if (!onset) throw new ActionError("A side-effect report needs an onset.");
+      if (!severity) throw new ActionError("A side-effect report needs a severity.");
       requireWithinLength("description", description, REPORT_DESCRIPTION_MAX);
-      next.reports.push({ id: id("rep"), subject, description, at: new Date().toISOString() });
-      next.notes.push(event(role, "report", `Owner filed a report: ${subject}`));
+      requireWithinLength("onset", onset, REPORT_ONSET_MAX);
+      requireWithinLength("severity", severity, REPORT_SEVERITY_MAX);
+      if (medicationId) findMedication(next, medicationId);
+      next.reports.push({
+        id: id("rep"),
+        medicationId,
+        description,
+        onset,
+        severity,
+        at: new Date().toISOString(),
+      });
+      next.notes.push(event(role, "report_side_effect", `Caregiver filed a side-effect report: ${description.slice(0, 60)}`));
       return next;
+    }
+
+    case "print_round_card": {
+      next.roundCards.push({ at: new Date().toISOString(), medications: next.medications });
+      next.notes.push(event(role, "print_round_card", "Caregiver printed a round card."));
+      return next;
+    }
+  }
+}
+
+/**
+ * Mutates `next` in place to apply an accepted proposal's effect, per the kind:
+ * hold -> status held; dose/time -> field update; substitute -> old stopped + new added;
+ * stop -> stopped; add -> added.
+ */
+function applyProposal(next: CaseState, proposal: ChangeProposal): void {
+  switch (proposal.kind) {
+    case "hold": {
+      const medicationId = proposal.medicationId!;
+      next.medications = next.medications.map((m) =>
+        m.id === medicationId ? { ...m, status: "held" as const } : m,
+      );
+      return;
+    }
+    case "dose": {
+      const medicationId = proposal.medicationId!;
+      const dose = String(proposal.payload.dose ?? "");
+      next.medications = next.medications.map((m) => (m.id === medicationId ? { ...m, dose } : m));
+      return;
+    }
+    case "time": {
+      const medicationId = proposal.medicationId!;
+      const schedule = String(proposal.payload.schedule ?? "");
+      next.medications = next.medications.map((m) => (m.id === medicationId ? { ...m, schedule } : m));
+      return;
+    }
+    case "substitute": {
+      const medicationId = proposal.medicationId!;
+      next.medications = next.medications.map((m) =>
+        m.id === medicationId ? { ...m, status: "stopped" as const } : m,
+      );
+      next.medications.push({
+        id: id("med"),
+        generic: String(proposal.payload.generic ?? ""),
+        dose: String(proposal.payload.dose ?? ""),
+        schedule: String(proposal.payload.schedule ?? ""),
+        prescriber: String(proposal.payload.prescriber ?? ""),
+        by: "partner",
+        createdAt: new Date().toISOString(),
+        status: "active",
+      });
+      return;
+    }
+    case "stop": {
+      const medicationId = proposal.medicationId!;
+      next.medications = next.medications.map((m) =>
+        m.id === medicationId ? { ...m, status: "stopped" as const } : m,
+      );
+      return;
+    }
+    case "add": {
+      next.medications.push({
+        id: id("med"),
+        generic: String(proposal.payload.generic ?? ""),
+        dose: String(proposal.payload.dose ?? ""),
+        schedule: String(proposal.payload.schedule ?? ""),
+        prescriber: String(proposal.payload.prescriber ?? ""),
+        by: "partner",
+        createdAt: new Date().toISOString(),
+        status: "active",
+      });
+      return;
     }
   }
 }
@@ -185,7 +358,7 @@ export async function applyAction(
     const role = roleForKey(caseState, key);
     if (!role) {
       throw new RoleError(
-        "This link's key does not match this case. Use the owner or partner URL exactly as it was shared; a guessed or edited key is not a valid credential.",
+        "This link's key does not match this case. Use the caregiver or pharmacist URL exactly as it was shared; a guessed or edited key is not a valid credential.",
       );
     }
     assertRole(type, role);

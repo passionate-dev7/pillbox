@@ -1,0 +1,10 @@
+{
+  "name": "caregiver accepts the pharmacist's pending proposal",
+  "role": "owner",
+  "page": "/c/:caseId?role=owner",
+  "state": "One pending proposal p1: hold warfarin, reason \"INR elevated\".",
+  "messages": [{ "role": "user", "content": "Go ahead and accept p1, hold the warfarin." }],
+  "expectedCall": [
+    { "functionName": "accept_change", "arguments": { "proposalId": "p1", "decision": "accept" } }
+  ]
+}

@@ -3,19 +3,21 @@
  *
  * Domain types come from `src/lib/types.ts` (UI agent, canonical). This file adds only what is
  * specific to the tool layer: the actions interface tools call, and the WebMCP tool descriptor
- * shape. There is no reader interface in this template because every tool reads straight off the
- * `CaseState` already loaded on the page; a real domain fork that reads external data adds a
- * `CaseReaders` interface here the same way `out-of-service` had `TripReaders`.
+ * shape.
  */
 export type {
   Role,
   SourceRef,
-  CaseItem,
-  Proposal,
+  Medication,
+  MedicationStatus,
+  ChangeProposal,
+  ChangeKind,
   TimelineEvent,
-  CaseReport,
+  SideEffectReport,
+  RoundCard,
   CaseState,
   CreateCaseInput,
+  CreateCaseMedicationInput,
 } from "@/lib/types";
 
 import type { CaseState, CreateCaseInput } from "@/lib/types";
@@ -23,16 +25,31 @@ import type { CaseState, CreateCaseInput } from "@/lib/types";
 /**
  * Mutations, exactly the `actions` object from the UI agent's `useCase() -> { caseState,
  * role, actions }`. Every one of these is server-authoritative: the server re-checks the role,
- * so a hidden tool is never the only thing standing between a partner and an owner-only action.
+ * so a hidden tool is never the only thing standing between a pharmacist and a caregiver-only
+ * action.
  */
 export interface CaseActions {
-  createCase(input: CreateCaseInput): Promise<CaseState & { ownerUrl: string; partnerUrl: string }>;
-  addItem(text: string): Promise<CaseState>;
-  proposeChange(text: string, reason: string): Promise<CaseState>;
+  createCase(
+    input: CreateCaseInput,
+  ): Promise<CaseState & { ownerUrl: string; partnerUrl: string }>;
+  addMedication(generic: string, dose: string, schedule: string, prescriber: string): Promise<CaseState>;
+  proposeChange(
+    kind: "hold" | "dose" | "time" | "substitute" | "stop" | "add",
+    reason: string,
+    medicationId?: string,
+    fields?: Record<string, unknown>,
+  ): Promise<CaseState>;
   acceptChange(proposalId: string): Promise<CaseState>;
   rejectChange(proposalId: string): Promise<CaseState>;
+  addCounselNote(text: string): Promise<CaseState>;
   addNote(text: string): Promise<CaseState>;
-  report(subject: string, description: string): Promise<CaseState>;
+  reportSideEffect(
+    description: string,
+    onset: string,
+    severity: string,
+    medicationId?: string,
+  ): Promise<CaseState>;
+  printRoundCard(): Promise<CaseState>;
 }
 
 /** JSON Schema (draft 2020-12 subset) as accepted by `document.modelContext.registerTool`. */

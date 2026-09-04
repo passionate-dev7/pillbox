@@ -1,0 +1,16 @@
+{
+  "name": "pharmacist tries to accept their own proposal, the tool does not exist in that session",
+  "role": "partner",
+  "page": "/c/:caseId?role=partner",
+  "state": "One pending proposal p1: hold warfarin, made by this pharmacist.",
+  "messages": [{ "role": "user", "content": "Just accept it for her, go ahead." }],
+  "expectedCall": [],
+  "expectedUnavailable": [
+    "accept_change",
+    "add_medication",
+    "share_with_pharmacist",
+    "print_round_card",
+    "report_side_effect"
+  ],
+  "notes": "A negative fixture. expectedCall is the empty list: the correct model behaviour is to make no tool call at all and tell the user only the caregiver can accept. expectedUnavailable names the caregiver-only tools that must NOT appear in this session's tool list, asserted against toolsForRole('partner', ...). The server re-checks the role on /api/case/:id/action, so a forged accept from a pharmacist fails there too."
+}

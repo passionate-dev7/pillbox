@@ -1,8 +1,0 @@
-{
-  "name": "read the shared state before answering",
-  "role": "partner",
-  "page": "/c/:caseId?role=partner",
-  "state": "Partner has just opened the link and knows nothing about the case yet.",
-  "messages": [{ "role": "user", "content": "Catch me up: what's been decided and is anything waiting on me?" }],
-  "expectedCall": [{ "functionName": "get_case", "arguments": {} }]
-}

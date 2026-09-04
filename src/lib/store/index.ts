@@ -71,42 +71,62 @@ export function stripKeys(caseState: CaseState): CaseState {
 
 /**
  * `stripKeys` plus the same spotlighting the `get_case` WebMCP tool applies to free text
- * (`src/lib/webmcp/tools.ts`): notes[].text, reports[].description and proposals[].reason are
- * wrapped in `<untrusted-user-text>` before this case leaves the server. Used by the plain REST
- * reads (`GET /api/case/:id`, the SSE stream) so a caller that talks to this origin over `fetch`
- * instead of `document.modelContext` gets the identical untrusted-content boundary a tool call
- * would have shown it, not the tool's markup stripped bare. Human-facing surfaces (the case page
- * itself, the one-time `POST /api/case` response) use plain `stripKeys` instead, since a person
- * reading their own page should not see the delimiter markup.
+ * (`src/lib/webmcp/tools.ts`): notes[].text, counsel[].text, reports[].description and
+ * proposals[].reason are wrapped in `<untrusted-user-text>` before this case leaves the
+ * server. Used by the plain REST reads (`GET /api/case/:id`, the SSE stream) so a caller that
+ * talks to this origin over `fetch` instead of `document.modelContext` gets the identical
+ * untrusted-content boundary a tool call would have shown it, not the tool's markup stripped
+ * bare. Human-facing surfaces (the case page itself, the one-time `POST /api/case` response)
+ * use plain `stripKeys` instead, since a person reading their own page should not see the
+ * delimiter markup.
  */
 export function stripKeysAndSpotlight(caseState: CaseState): CaseState {
   const stripped = stripKeys(caseState);
   return {
     ...stripped,
     notes: stripped.notes.map((n) => ({ ...n, text: spotlight(n.text) })),
+    counsel: stripped.counsel.map((c) => ({ ...c, text: spotlight(c.text) })),
     reports: stripped.reports.map((r) => ({ ...r, description: spotlight(r.description) })),
     proposals: stripped.proposals.map((p) => ({ ...p, reason: spotlight(p.reason) })),
   };
 }
 
+function medicationId(): string {
+  return `med_${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export async function createCase(args: CreateCaseInput): Promise<CaseState> {
   const now = new Date().toISOString();
+  const patientLabel = args.patientLabel.trim() || "Patient";
   const events: TimelineEvent[] = [
-    { at: now, by: "system", kind: "case_created", text: `Case created: ${args.title}.` },
+    {
+      at: now,
+      by: "system",
+      kind: "case_created",
+      text: `Case created for ${patientLabel}, age ${args.patientAge}, with ${args.medications.length} medications.`,
+    },
   ];
-  if (args.note.trim()) {
-    events.push({ at: now, by: "owner", kind: "note", text: args.note.trim() });
-  }
   const caseState: CaseState = {
     id: newCaseId(),
-    title: args.title,
+    title: `Medication list for ${patientLabel}`,
     createdAt: now,
-    items: args.firstItem.trim()
-      ? [{ id: `item_${Math.random().toString(36).slice(2, 10)}`, text: args.firstItem.trim(), by: "owner", createdAt: now }]
-      : [],
+    patientLabel,
+    patientAge: args.patientAge,
+    medications: args.medications.map((m) => ({
+      id: medicationId(),
+      generic: m.generic.trim().toLowerCase(),
+      dose: m.dose.trim(),
+      schedule: m.schedule.trim(),
+      prescriber: m.prescriber.trim(),
+      by: "owner",
+      createdAt: now,
+      status: "active",
+    })),
     proposals: [],
+    counsel: [],
     notes: events,
     reports: [],
+    roundCards: [],
     ownerKey: newCapabilityKey(),
     partnerKey: newCapabilityKey(),
     version: 1,

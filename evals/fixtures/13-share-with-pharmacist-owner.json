@@ -1,0 +1,8 @@
+{
+  "name": "caregiver wants the pharmacist link",
+  "role": "owner",
+  "page": "/c/:caseId?role=owner",
+  "state": "Case for patient \"Dad\", age 78.",
+  "messages": [{ "role": "user", "content": "Give me the link to share with his pharmacist." }],
+  "expectedCall": [{ "functionName": "share_with_pharmacist", "arguments": {} }]
+}

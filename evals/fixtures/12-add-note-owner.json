@@ -1,0 +1,12 @@
+{
+  "name": "caregiver leaves a note for the pharmacist",
+  "role": "owner",
+  "page": "/c/:caseId?role=owner",
+  "state": "Case for patient \"Dad\", age 78.",
+  "messages": [
+    { "role": "user", "content": "Note that he mentioned some dizziness this morning, for the pharmacist to see." }
+  ],
+  "expectedCall": [
+    { "functionName": "add_note", "arguments": { "text": "He mentioned some dizziness this morning." } }
+  ]
+}

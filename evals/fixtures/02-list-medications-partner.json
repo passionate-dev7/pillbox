@@ -1,0 +1,8 @@
+{
+  "name": "pharmacist asks what is on the list",
+  "role": "partner",
+  "page": "/c/:caseId?role=partner",
+  "state": "Case for patient \"Dad\", age 78, eleven medications, four prescribers.",
+  "messages": [{ "role": "user", "content": "Pull up the current medication list for this patient." }],
+  "expectedCall": [{ "functionName": "list_medications", "arguments": {} }]
+}

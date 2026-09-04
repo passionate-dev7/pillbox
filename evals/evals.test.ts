@@ -100,15 +100,15 @@ describe("eval fixtures", () => {
 describe("the validator can fail", () => {
   it("rejects a wrong type, a missing required field and an unknown property", () => {
     const schema = schemas.propose_change.schema;
-    expect(validate(schema, { text: "A", reason: "B" })).toEqual([]);
-    expect(validate(schema, { text: "A" })).toContain('$: missing required property "reason"');
-    expect(validate(schema, { text: 1, reason: "B" })).toContain(
-      "$.text: expected string, got integer"
+    expect(validate(schema, { kind: "hold", reason: "B" })).toEqual([]);
+    expect(validate(schema, { kind: "hold" })).toContain('$: missing required property "reason"');
+    expect(validate(schema, { kind: 1, reason: "B" })).toContain(
+      "$.kind: expected string, got integer"
     );
-    expect(validate(schema, { text: "A", reason: "B", nope: 1 })).toContain(
+    expect(validate(schema, { kind: "hold", reason: "B", nope: 1 })).toContain(
       '$: unexpected property "nope"'
     );
-    expect(validate(schema, { text: "A", reason: "B".repeat(400) })).toContain(
+    expect(validate(schema, { kind: "hold", reason: "B".repeat(400) })).toContain(
       "$.reason: longer than maxLength 280"
     );
   });

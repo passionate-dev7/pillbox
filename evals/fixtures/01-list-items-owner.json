@@ -1,8 +1,0 @@
-{
-  "name": "owner asks what is on the case",
-  "role": "owner",
-  "page": "/c/:caseId",
-  "state": "Case has one item already: \"confirm seat count\".",
-  "messages": [{ "role": "user", "content": "What's on this case so far?" }],
-  "expectedCall": [{ "functionName": "list_items", "arguments": {} }]
-}

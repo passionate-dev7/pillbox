@@ -1,0 +1,8 @@
+{
+  "name": "caregiver asks about a recall",
+  "role": "owner",
+  "page": "/c/:caseId?role=owner",
+  "state": "Case for patient \"Dad\", age 78, metformin on the active list.",
+  "messages": [{ "role": "user", "content": "I heard something about a metformin recall, is that one of his?" }],
+  "expectedCall": [{ "functionName": "check_recalls", "arguments": { "generic": "metformin" } }]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "caregiver prints a round card before the appointment",
+  "role": "owner",
+  "page": "/c/:caseId?role=owner",
+  "state": "Case for patient \"Dad\", age 78, eleven medications active.",
+  "messages": [{ "role": "user", "content": "Print a round card so I have the list for his checkup tomorrow." }],
+  "expectedCall": [{ "functionName": "print_round_card", "arguments": {} }]
+}

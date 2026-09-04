@@ -16,79 +16,153 @@ vi.mock("@/lib/store", async (importOriginal) => {
 });
 
 import { createCase, getCase as storeGetCase, StaleWriteError } from "@/lib/store";
-import { applyAction, RoleError } from "@/lib/store/actions";
+import { applyAction, assertRole, RoleError } from "@/lib/store/actions";
 import type { CaseState } from "@/lib/types";
 import { GET as getCaseRoute } from "@/app/api/case/[id]/route";
 import { GET as streamRoute } from "@/app/api/case/[id]/stream/route";
-import { getCase as getCaseToolFactory } from "@/lib/webmcp/tools";
+import { listMedications as listMedicationsToolFactory } from "@/lib/webmcp/tools";
 
 async function buildCase(): Promise<CaseState> {
-  return createCase({ title: "Q3 renewal for Acme", firstItem: "Confirm seat count", note: "" });
+  return createCase({
+    patientLabel: "Dad",
+    patientAge: 78,
+    medications: [
+      { generic: "warfarin", dose: "5 mg", schedule: "once daily, evening", prescriber: "Dr. Alvarez" },
+    ],
+  });
 }
 
 describe("role is derived from the capability key, never a self-declared label", () => {
   it("missing key: 403", async () => {
     const caseState = await buildCase();
-    await expect(applyAction(caseState.id, "add_item", "", { text: "x" })).rejects.toBeInstanceOf(RoleError);
+    await expect(
+      applyAction(caseState.id, "add_medication", "", {
+        generic: "x",
+        dose: "1 mg",
+        schedule: "daily",
+        prescriber: "Dr. X",
+      }),
+    ).rejects.toBeInstanceOf(RoleError);
   });
 
   it("a guessed key that matches neither capability: 403", async () => {
     const caseState = await buildCase();
     await expect(
-      applyAction(caseState.id, "add_item", "totally-guessed-key", { text: "x" }),
+      applyAction(caseState.id, "add_medication", "totally-guessed-key", {
+        generic: "x",
+        dose: "1 mg",
+        schedule: "daily",
+        prescriber: "Dr. X",
+      }),
     ).rejects.toBeInstanceOf(RoleError);
   });
 
-  it("partner key cannot add_item, accept_change or report", async () => {
+  it("partner key cannot add_medication, accept_change or report_side_effect", async () => {
     const caseState = await buildCase();
     await expect(
-      applyAction(caseState.id, "add_item", caseState.partnerKey, { text: "x" }),
+      applyAction(caseState.id, "add_medication", caseState.partnerKey, {
+        generic: "x",
+        dose: "1 mg",
+        schedule: "daily",
+        prescriber: "Dr. X",
+      }),
     ).rejects.toBeInstanceOf(RoleError);
     await expect(
       applyAction(caseState.id, "accept_change", caseState.partnerKey, { proposalId: "p_nope" }),
     ).rejects.toBeInstanceOf(RoleError);
     await expect(
-      applyAction(caseState.id, "report", caseState.partnerKey, { subject: "s", description: "d" }),
+      applyAction(caseState.id, "report_side_effect", caseState.partnerKey, {
+        description: "d",
+        onset: "today",
+        severity: "mild",
+      }),
     ).rejects.toBeInstanceOf(RoleError);
   });
 
-  it("owner key cannot propose_change", async () => {
+  it("owner key cannot propose_change or add_counsel_note", async () => {
     const caseState = await buildCase();
+    const medicationId = caseState.medications[0].id;
     await expect(
-      applyAction(caseState.id, "propose_change", caseState.ownerKey, { text: "x", reason: "y" }),
+      applyAction(caseState.id, "propose_change", caseState.ownerKey, {
+        kind: "hold",
+        medicationId,
+        reason: "y",
+      }),
+    ).rejects.toBeInstanceOf(RoleError);
+    await expect(
+      applyAction(caseState.id, "add_counsel_note", caseState.ownerKey, { text: "y" }),
     ).rejects.toBeInstanceOf(RoleError);
   });
 
-  it("the owner key legitimately adds an item; the partner key legitimately proposes one", async () => {
-    const caseState = await buildCase();
-    const added = await applyAction(caseState.id, "add_item", caseState.ownerKey, { text: "book the room" });
-    expect(added.items).toHaveLength(2);
+  it("assertRole throws RoleError for every OWNER_ONLY type given role partner, and every PARTNER_ONLY type given role owner", () => {
+    for (const type of ["add_medication", "accept_change", "report_side_effect", "print_round_card"] as const) {
+      expect(() => assertRole(type, "partner")).toThrow(RoleError);
+    }
+    for (const type of ["propose_change", "add_counsel_note"] as const) {
+      expect(() => assertRole(type, "owner")).toThrow(RoleError);
+    }
+  });
 
+  it("the owner key legitimately adds a medication; the partner key legitimately proposes a change", async () => {
+    const caseState = await buildCase();
+    const added = await applyAction(caseState.id, "add_medication", caseState.ownerKey, {
+      generic: "lisinopril",
+      dose: "10 mg",
+      schedule: "once daily",
+      prescriber: "Dr. Chen",
+    });
+    expect(added.medications).toHaveLength(2);
+
+    const medicationId = added.medications[0].id;
     const proposed = await applyAction(caseState.id, "propose_change", caseState.partnerKey, {
-      text: "invite finance",
-      reason: "they need to sign off",
+      kind: "hold",
+      medicationId,
+      reason: "INR is elevated",
     });
     expect(proposed.proposals).toHaveLength(1);
     expect(proposed.proposals[0].by).toBe("partner");
     expect(proposed.proposals[0].status).toBe("pending");
+    expect(proposed.proposals[0].kind).toBe("hold");
   });
 
-  it("owner accepting a pending proposal adds it as an item and marks it accepted", async () => {
+  it("owner accepting a hold proposal marks the medication held and the proposal accepted", async () => {
     let caseState = await buildCase();
+    const medicationId = caseState.medications[0].id;
     caseState = await applyAction(caseState.id, "propose_change", caseState.partnerKey, {
-      text: "invite finance",
-      reason: "they need to sign off",
+      kind: "hold",
+      medicationId,
+      reason: "INR is elevated",
     });
     const proposalId = caseState.proposals[0].id;
     const accepted = await applyAction(caseState.id, "accept_change", caseState.ownerKey, { proposalId });
     expect(accepted.proposals[0].status).toBe("accepted");
-    expect(accepted.items.some((i) => i.text === "invite finance" && i.by === "partner")).toBe(true);
+    expect(accepted.medications.find((m) => m.id === medicationId)!.status).toBe("held");
   });
 
-  it("owner rejecting a pending proposal never adds an item", async () => {
+  it("owner accepting a substitute proposal stops the old medication and adds the new one", async () => {
     let caseState = await buildCase();
+    const medicationId = caseState.medications[0].id;
     caseState = await applyAction(caseState.id, "propose_change", caseState.partnerKey, {
-      text: "cancel the meeting",
+      kind: "substitute",
+      medicationId,
+      reason: "switch to apixaban, easier monitoring",
+      generic: "apixaban",
+      dose: "5 mg",
+      schedule: "twice daily",
+      prescriber: "Dr. Alvarez",
+    });
+    const proposalId = caseState.proposals[0].id;
+    const accepted = await applyAction(caseState.id, "accept_change", caseState.ownerKey, { proposalId });
+    expect(accepted.medications.find((m) => m.id === medicationId)!.status).toBe("stopped");
+    expect(accepted.medications.some((m) => m.generic === "apixaban" && m.status === "active")).toBe(true);
+  });
+
+  it("owner rejecting a pending proposal never changes any medication", async () => {
+    let caseState = await buildCase();
+    const medicationId = caseState.medications[0].id;
+    caseState = await applyAction(caseState.id, "propose_change", caseState.partnerKey, {
+      kind: "hold",
+      medicationId,
       reason: "not needed",
     });
     const proposalId = caseState.proposals[0].id;
@@ -97,7 +171,7 @@ describe("role is derived from the capability key, never a self-declared label",
       decision: "reject",
     });
     expect(rejected.proposals[0].status).toBe("rejected");
-    expect(rejected.items.some((i) => i.text === "cancel the meeting")).toBe(false);
+    expect(rejected.medications.find((m) => m.id === medicationId)!.status).toBe("active");
   });
 });
 
@@ -130,10 +204,10 @@ describe("both capability keys are stripped from every unauthenticated or model-
     await reader.cancel().catch(() => undefined);
   });
 
-  it("the get_case tool result never contains either key's actual value", async () => {
+  it("the list_medications tool result never contains either key's actual value", async () => {
     const caseState = await buildCase();
     const stored = await storeGetCase(caseState.id);
-    const toolDef = getCaseToolFactory({
+    const toolDef = listMedicationsToolFactory({
       role: "owner",
       caseState: stored,
       actions: {} as never,
@@ -166,11 +240,15 @@ describe("free text over its length ceiling is rejected with 400, never silently
     expect(after.notes.at(-1)!.text).toHaveLength(500);
   });
 
-  it("a report description over 1000 characters: 400, nothing stored", async () => {
+  it("a side-effect description over 1000 characters: 400, nothing stored", async () => {
     const caseState = await buildCase();
     const description = "C".repeat(1200);
     await expect(
-      applyAction(caseState.id, "report", caseState.ownerKey, { subject: "s", description }),
+      applyAction(caseState.id, "report_side_effect", caseState.ownerKey, {
+        description,
+        onset: "today",
+        severity: "mild",
+      }),
     ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("1200") });
     const after = await storeGetCase(caseState.id);
     expect(after!.reports).toHaveLength(0);
@@ -178,20 +256,23 @@ describe("free text over its length ceiling is rejected with 400, never silently
 
   it("a propose_change reason over 500 characters: 400", async () => {
     const caseState = await buildCase();
+    const medicationId = caseState.medications[0].id;
     await expect(
       applyAction(caseState.id, "propose_change", caseState.partnerKey, {
-        text: "x",
+        kind: "hold",
+        medicationId,
         reason: "D".repeat(501),
       }),
     ).rejects.toMatchObject({ status: 400 });
   });
 
-  it("a report subject over 120 characters: 400", async () => {
+  it("a side-effect severity over 40 characters: 400", async () => {
     const caseState = await buildCase();
     await expect(
-      applyAction(caseState.id, "report", caseState.ownerKey, {
-        subject: "E".repeat(140),
-        description: "too long a subject",
+      applyAction(caseState.id, "report_side_effect", caseState.ownerKey, {
+        description: "too long a severity",
+        onset: "today",
+        severity: "E".repeat(60),
       }),
     ).rejects.toMatchObject({ status: 400 });
   });
@@ -219,17 +300,23 @@ describe("status codes an agent can act on: 404 for an unknown case, 409 for ret
   });
 });
 
-describe("GET /api/case/[id] and the SSE stream spotlight free text the same way get_case does", () => {
-  it("GET wraps notes[].text, reports[].description and proposals[].reason", async () => {
+describe("GET /api/case/[id] and the SSE stream spotlight free text the same way list_medications does", () => {
+  it("GET wraps notes[].text, counsel[].text, reports[].description and proposals[].reason", async () => {
     let caseState = await buildCase();
+    const medicationId = caseState.medications[0].id;
     caseState = await applyAction(caseState.id, "add_note", caseState.ownerKey, { text: "call me when you land" });
-    caseState = await applyAction(caseState.id, "report", caseState.ownerKey, {
-      subject: "missing signature",
-      description: "the PDF came back unsigned",
+    caseState = await applyAction(caseState.id, "report_side_effect", caseState.ownerKey, {
+      description: "he felt dizzy this morning",
+      onset: "this morning",
+      severity: "mild",
     });
     caseState = await applyAction(caseState.id, "propose_change", caseState.partnerKey, {
-      text: "invite finance",
-      reason: "they need to sign off",
+      kind: "hold",
+      medicationId,
+      reason: "they need to check his INR",
+    });
+    caseState = await applyAction(caseState.id, "add_counsel_note", caseState.partnerKey, {
+      text: "take with food to reduce nausea",
     });
 
     const res = await getCaseRoute(new Request(`http://test/api/case/${caseState.id}`), {
@@ -239,10 +326,13 @@ describe("GET /api/case/[id] and the SSE stream spotlight free text the same way
     const humanNote = body.case.notes.find((n) => n.kind === "note")!;
     expect(humanNote.text).toBe("<untrusted-user-text>call me when you land</untrusted-user-text>");
     expect(body.case.reports[0]!.description).toBe(
-      "<untrusted-user-text>the PDF came back unsigned</untrusted-user-text>",
+      "<untrusted-user-text>he felt dizzy this morning</untrusted-user-text>",
     );
     expect(body.case.proposals[0]!.reason).toBe(
-      "<untrusted-user-text>they need to sign off</untrusted-user-text>",
+      "<untrusted-user-text>they need to check his INR</untrusted-user-text>",
+    );
+    expect(body.case.counsel[0]!.text).toBe(
+      "<untrusted-user-text>take with food to reduce nausea</untrusted-user-text>",
     );
     expect(res.headers.get("Cache-Control")).toBe("private, no-store");
   });
@@ -267,5 +357,15 @@ describe("GET /api/case/[id] and the SSE stream spotlight free text the same way
     } as never);
     expect(res.status).toBe(404);
     expect(res.headers.get("Cache-Control")).toBe("private, no-store");
+  });
+});
+
+describe("print_round_card stores a snapshot on the case", () => {
+  it("owner printing a round card stores medications[] at the time of printing", async () => {
+    const caseState = await buildCase();
+    const after = await applyAction(caseState.id, "print_round_card", caseState.ownerKey, {});
+    expect(after.roundCards).toHaveLength(1);
+    expect(after.roundCards[0].medications).toHaveLength(1);
+    expect(after.roundCards[0].medications[0].generic).toBe("warfarin");
   });
 });

@@ -1,28 +1,37 @@
 /**
- * The whole domain model for the two-agent spine: a Case shared by two roles, an owner and
- * a partner, who each get a different WebMCP tool set on the same page. Swap this file's
- * shape (and src/lib/store/actions.ts's mutations) for your own domain; everything in
- * src/lib/webmcp and src/lib/store/backend.ts is domain-agnostic and does not change.
+ * Domain model for Pill Round: a caregiver (owner) and a pharmacist (partner) share one
+ * medication list for one patient. Everything in src/lib/webmcp and src/lib/store/backend.ts
+ * outside this file and src/lib/store/actions.ts stays domain-agnostic.
  */
 export type Role = "owner" | "partner";
 
-/** A source citation. Placeholder here (`dataset: "case-store"`); point it at your real
- *  data source once this is forked into a real domain, the same shape either way. */
+/** A source citation: which dataset, what query, how many rows it returned. */
 export type SourceRef = { dataset: string; query: string; rows: number };
 
-export type CaseItem = {
+export type MedicationStatus = "active" | "held" | "stopped";
+
+export type Medication = {
   id: string;
-  text: string;
+  generic: string;
+  brand?: string;
+  dose: string;
+  schedule: string;
+  prescriber: string;
   by: Role;
   createdAt: string;
+  status: MedicationStatus;
 };
 
-export type Proposal = {
+export type ChangeKind = "hold" | "dose" | "time" | "substitute" | "stop" | "add";
+
+export type ChangeProposal = {
   id: string;
   by: "partner";
-  /** Opaque to the store: `mutate()` never inspects its shape beyond `payload.text`, which
-   *  is the one convention this template ships (see accept_change in store/actions.ts).
-   *  A real domain fork can carry a structured object here instead of free text. */
+  medicationId?: string;
+  kind: ChangeKind;
+  /** Opaque to the store beyond the fields `accept_change` reads for each `kind` (see
+   *  src/lib/store/actions.ts): `dose`/`schedule` for kind "dose"/"time", `generic`/`brand`/
+   *  `dose`/`schedule`/`prescriber` for kind "substitute"/"add". */
   payload: Record<string, unknown>;
   reason: string;
   createdAt: string;
@@ -36,21 +45,33 @@ export type TimelineEvent = {
   text: string;
 };
 
-export type CaseReport = {
+export type SideEffectReport = {
   id: string;
-  subject: string;
+  medicationId?: string;
   description: string;
+  onset: string;
+  severity: string;
   at: string;
+};
+
+export type RoundCard = {
+  at: string;
+  medications: Medication[];
 };
 
 export type CaseState = {
   id: string;
   title: string;
   createdAt: string;
-  items: CaseItem[];
-  proposals: Proposal[];
+  /** "Dad", 78. No real patient names, no dates of birth, anywhere. */
+  patientLabel: string;
+  patientAge: number;
+  medications: Medication[];
+  proposals: ChangeProposal[];
+  counsel: TimelineEvent[];
+  reports: SideEffectReport[];
   notes: TimelineEvent[];
-  reports: CaseReport[];
+  roundCards: RoundCard[];
   /**
    * Per-link capability tokens minted at creation. `role` is derived from which of these a
    * caller presents; it is never trusted as a self-declared label. Stripped from every
@@ -63,11 +84,13 @@ export type CaseState = {
 };
 
 export type CaseActionType =
-  | "add_item"
+  | "add_medication"
   | "propose_change"
   | "accept_change"
+  | "add_counsel_note"
   | "add_note"
-  | "report";
+  | "report_side_effect"
+  | "print_round_card";
 
 export type CaseAction = {
   type: CaseActionType;
@@ -76,10 +99,15 @@ export type CaseAction = {
   payload?: Record<string, unknown>;
 };
 
+export type CreateCaseMedicationInput = {
+  generic: string;
+  dose: string;
+  schedule: string;
+  prescriber: string;
+};
+
 export type CreateCaseInput = {
-  title: string;
-  /** Seeds the case's first item, attributed to the owner. */
-  firstItem: string;
-  /** Seeds the case's first timeline note, e.g. context for the partner. */
-  note: string;
+  patientLabel: string;
+  patientAge: number;
+  medications: CreateCaseMedicationInput[];
 };
