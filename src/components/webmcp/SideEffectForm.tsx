@@ -1,12 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { CaseActions } from "@/lib/webmcp/contracts";
 import styles from "./tool-form.module.css";
 
-const TOOL_NAME = "report_form";
+const TOOL_NAME = "report_side_effect";
 const TOOL_DESCRIPTION =
-  "File a report against this case: a subject and a description. The owner reads the filled form and presses Send; it is never submitted automatically.";
+  "Report a possible side effect for a medication on this round: which medication, what happened, when it started, how severe. The caregiver reads the filled form and presses Send; it is never submitted automatically.";
+
+type ReportSideEffectFn = (
+  description: string,
+  onset: string,
+  severity: string,
+  medicationId?: string,
+) => Promise<{ reports: unknown[] }>;
 
 /**
  * The declarative half of the demo: a real <form> carrying `toolname` / `tooldescription` /
@@ -15,13 +21,13 @@ const TOOL_DESCRIPTION =
  *
  * There is deliberately NO `toolautosubmit`. Without it the agent fills the fields, the browser
  * focuses the submit button, and a human has to press it. That is WebMCP's built-in
- * human-in-the-loop for declarative tools: any write an agent should never be able to send on
- * its own goes through a form shaped like this one, not through registerTool.
+ * human-in-the-loop for declarative tools.
  *
- * Render only in the owner session. This is the template's one worked example of a declarative
- * tool; copy this file's shape (not its fields) for your own domain's forms.
+ * Render only in the caregiver session, per docs/BUILD-CONTRACT.md (report_side_effect is
+ * OWNER_ONLY). Takes only the one action method it needs (structural typing) so this component
+ * does not couple to the exact shape of CaseActions while the tools agent's contracts.ts lands.
  */
-export function ReportForm({ actions }: { actions: CaseActions }) {
+export function SideEffectForm({ reportSideEffect }: { reportSideEffect: ReportSideEffectFn }) {
   const [agentFilled, setAgentFilled] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
@@ -42,15 +48,24 @@ export function ReportForm({ actions }: { actions: CaseActions }) {
 
   async function send(form: HTMLFormElement) {
     const data = new FormData(form);
-    const subject = String(data.get("subject") ?? "").trim();
+    const medicationId = String(data.get("medicationId") ?? "").trim();
     const description = String(data.get("description") ?? "").trim();
-    if (!subject || !description) throw new Error("Both the subject and the description are required.");
-    const caseState = await actions.report(subject, description);
+    const onset = String(data.get("onset") ?? "").trim();
+    const severity = String(data.get("severity") ?? "").trim();
+    if (!description || !onset || !severity) {
+      throw new Error("Description, onset, and severity are required.");
+    }
+    const caseState = await reportSideEffect(
+      description,
+      onset,
+      severity,
+      medicationId || undefined,
+    );
     return {
       filed: true,
-      subject,
+      description,
       reportCount: caseState.reports.length,
-      note: "The report is on the shared case timeline; the partner can see it.",
+      note: "The report is on the shared round timeline; the pharmacist can see it.",
     };
   }
 
@@ -66,7 +81,7 @@ export function ReportForm({ actions }: { actions: CaseActions }) {
         const done = send(form).then(
           (result) => {
             setAgentFilled(false);
-            setStatus(`Filed report: ${result.subject}.`);
+            setStatus(`Filed report: ${result.description}.`);
             form.reset();
             return result;
           },
@@ -76,41 +91,62 @@ export function ReportForm({ actions }: { actions: CaseActions }) {
             throw new Error(`The report was not filed: ${message}`);
           }
         );
-        // Hand the structured result straight back to the agent that filled the form,
-        // instead of navigating. respondWith is the mechanism Chrome documents today.
         if (native.agentInvoked && native.respondWith) native.respondWith(done);
         else void done.catch(() => undefined);
       }}
     >
-      <h2 className="colhead">File a report</h2>
+      <h2 className="colhead">Report a Side Effect</h2>
 
       <label className="mt-3 block text-[0.8125rem] font-semibold">
-        Subject
+        Medication (optional)
         <input
-          name="subject"
-          required
-          toolparamdescription="A short subject line for the report."
-          placeholder="Missing attachment"
+          name="medicationId"
+          toolparamdescription="The id of the medication this side effect relates to, if known."
+          placeholder="med id…"
           className="mt-1 block w-full rounded-control border border-hair-strong bg-paper px-2.5 py-2 text-[0.9375rem] font-normal focus:border-accent"
         />
       </label>
 
       <label className="mt-3 block text-[0.8125rem] font-semibold">
-        Description
+        What happened
         <textarea
           name="description"
           required
           rows={3}
-          toolparamdescription="What happened, in your own words."
+          toolparamdescription="A plain description of the side effect observed."
+          placeholder="Felt dizzy after the morning dose…"
           className="mt-1 block w-full rounded-control border border-hair-strong bg-paper px-2.5 py-2 text-[0.9375rem] font-normal focus:border-accent"
         />
       </label>
+
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <label className="block text-[0.8125rem] font-semibold">
+          Onset
+          <input
+            name="onset"
+            required
+            toolparamdescription="When it started, e.g. 'about 30 minutes after the dose'."
+            placeholder="30 minutes after dose…"
+            className="mt-1 block w-full rounded-control border border-hair-strong bg-paper px-2.5 py-2 text-[0.9375rem] font-normal focus:border-accent"
+          />
+        </label>
+        <label className="block text-[0.8125rem] font-semibold">
+          Severity
+          <input
+            name="severity"
+            required
+            toolparamdescription="How severe it was, e.g. 'mild', 'moderate', 'severe'."
+            placeholder="mild…"
+            className="mt-1 block w-full rounded-control border border-hair-strong bg-paper px-2.5 py-2 text-[0.9375rem] font-normal focus:border-accent"
+          />
+        </label>
+      </div>
 
       <button
         type="submit"
         className={`${styles.submit} mt-4 w-full rounded-control bg-accent px-4 py-2.5 text-[0.9375rem] font-semibold text-paper transition-transform duration-150 active:scale-[0.97]`}
       >
-        Send report
+        Send Report
       </button>
 
       {status && <p className="code mt-2 text-[0.6875rem]" aria-live="polite">{status}</p>}
@@ -118,4 +154,4 @@ export function ReportForm({ actions }: { actions: CaseActions }) {
   );
 }
 
-export default ReportForm;
+export default SideEffectForm;

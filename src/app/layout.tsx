@@ -20,11 +20,11 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "webmcp-two-agent-spine",
-    template: "%s",
+    default: "Pill Round",
+    template: "%s | Pill Round",
   },
   description:
-    "Two people, two agents, one WebMCP page: capability-key roles, confirm-before-mutate, shared state, SSE. Template.",
+    "A shared medication round card for a family caregiver and a pharmacist: capability-key roles, confirm-before-mutate, interaction flags from openFDA labels, a printable MAR sheet.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

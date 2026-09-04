@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 /*
- * Out of Service reads as transit signage on paper, not as a dashboard.
- * Every colour here is a meaning: a subway line, an elevator reliability tier,
- * or the fact that something is out. Nothing is decoration.
+ * Pill Round reads as a pharmacy round card / MAR sheet on paper, not a dashboard.
+ * Every colour here is a meaning: a clinical severity tier or the fact that a dose is out.
+ * Nothing is decoration.
  *
  * Tokens live in one @theme block. Components reference the semantic name
- * (bg-paper, text-ink, border-hair, text-tier-unreliable), never a raw hex.
+ * (bg-paper, text-ink, border-hair, text-tier-out), never a raw hex.
  */
 
 @theme {
@@ -14,7 +14,7 @@
   --font-sans: ui-sans-serif, system-ui, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-  /* Surface: warm off-white MTA card stock, near-black ink. Never #fff, never #000. */
+  /* Surface: warm off-white MAR card stock, near-black ink. Never #fff, never #000. */
   --color-paper: #f2efe9;
   --color-paper-sunk: #ece8dc;
   --color-paper-inset: #e4dfce;
@@ -24,20 +24,18 @@
   --color-hair: #ddd8c8;
   --color-hair-strong: #b8b29c;
 
-  /* One accent: MTA signage blue. Interactive only, never body text.
-     MTA orange (#FF6319) is the B/D/F/M bullet and nothing else. */
-  --color-accent: #0039a6;
-  --color-accent-soft: #dce6f5;
-  --color-accent-ink: #002a7a;
+  /* One accent: clinical teal. Interactive only, never body text. */
+  --color-accent: #0b6e6e;
+  --color-accent-soft: #dcedeb;
+  --color-accent-ink: #084f4f;
 
-  /* Reliability tiers, all AA on the surface (docs/DESIGN.md contrast table). */
+  /* Severity tiers, all AA on the surface (DESIGN.md contrast table). */
   --color-tier-reliable: #0c6b3d;
   --color-tier-watch: #8a5a00;
-  --color-tier-unreliable: #a6360f;
   --color-tier-out: #7a1010;
   --color-tier-unknown: #4a4a46;
 
-  /* A simulated outage is never mistaken for a real one. */
+  /* A simulated / demo control is never mistaken for a real one. */
   --color-sim: #6c2bd9;
 
   /* Square corners on panels and chips; 2px only on things you type in or press. */
@@ -65,13 +63,13 @@ body {
 }
 
 @layer base {
-  /* Every figure on this page is read against another figure. Line them up. */
+  /* Every figure on a round card is read against another figure. Line them up. */
   .num {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
   }
 
-  /* Station names and route ids: the condensed, tight setting of a platform sign. */
+  /* Patient label, med names: the condensed, tight setting of a chart header. */
   .plate {
     font-stretch: 88%;
     letter-spacing: -0.02em;
@@ -79,14 +77,14 @@ body {
     line-height: 1.02;
   }
 
-  /* Equipment codes and times: a maintenance tag, not body copy. */
+  /* Timestamps and set_ids: a chart tag, not body copy. */
   .code {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.01em;
   }
 
-  /* A column heading on a status board. Used sparingly, never stacked on an h2. */
+  /* A column heading on a round card. Used sparingly, never stacked on an h2. */
   .colhead {
     font-size: 0.6875rem;
     font-weight: 600;
@@ -101,7 +99,7 @@ body {
     outline-offset: 2px;
   }
 
-  /* Native listbox styled as a departure board rather than an OS widget. */
+  /* Native listbox styled as a chart list rather than an OS widget. */
   select[size] option {
     padding: 5px 8px;
     color: var(--color-ink);
@@ -113,13 +111,10 @@ body {
   }
 }
 
-/* A route whose elevator is out is hatched like a closed entrance, not glowing red. */
-.hatched {
-  background-image: repeating-linear-gradient(
-    -45deg,
-    transparent 0 7px,
-    color-mix(in srgb, var(--color-tier-out) 22%, transparent) 7px 9px
-  );
+/* A held or stopped medication row is struck through, not hidden. */
+.med-held {
+  text-decoration: line-through;
+  color: var(--color-ink-subtle);
 }
 
 /* Provenance: a dotted value you can click or tab to for the query behind it. */
@@ -139,5 +134,42 @@ body {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/*
+ * Round card print rules, per DESIGN.md "Print" section: black on white, hairlines only,
+ * no chrome. Only .round-card and its descendants survive to paper.
+ */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .round-card,
+  .round-card * {
+    visibility: visible;
+  }
+  .round-card {
+    position: absolute;
+    inset: 0;
+    background: #ffffff;
+    color: #000000;
+    box-shadow: none;
+  }
+  .round-card table,
+  .round-card th,
+  .round-card td {
+    border-color: #000000 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .round-card .chip-accent,
+  .round-card .chip-simulated {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid #000000;
+  }
+  @page {
+    margin: 0.5in;
   }
 }

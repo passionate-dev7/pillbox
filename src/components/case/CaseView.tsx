@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useCase } from "./CaseProvider";
 import { PartnerLink } from "./PartnerLink";
 import { Button } from "@/components/ui/Button";
+import { Footer } from "@/components/ui/Footer";
 import { WebMCPTools } from "@/components/webmcp/WebMCPTools";
-import { ReportForm } from "@/components/webmcp/ReportForm";
+import { checkInteractions } from "@/lib/index";
+import type { ChangeProposal, Medication } from "@/lib/types";
+
+const TIME_SLOTS = ["Morning", "Noon", "Evening", "Bedtime"] as const;
 
 /** A stream is either carrying versions or it is not. Say which, in one glyph and one word. */
 function StreamDot({ state }: { state: "connecting" | "open" | "closed" }) {
@@ -19,7 +23,7 @@ function StreamDot({ state }: { state: "connecting" | "open" | "closed" }) {
   return (
     <span className="inline-flex items-center gap-1.5 text-[0.6875rem] font-medium">
       <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: colour }} aria-hidden />
-      <span className="text-ink-soft">case {state}</span>
+      <span className="text-ink-soft">round {state}</span>
     </span>
   );
 }
@@ -29,13 +33,15 @@ function Panel({
   title,
   meta,
   children,
+  testId,
 }: {
   title: string;
   meta?: React.ReactNode;
   children: React.ReactNode;
+  testId?: string;
 }) {
   return (
-    <section className="border border-hair-strong bg-paper">
+    <section className="border border-hair-strong bg-paper" data-testid={testId}>
       <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-hair bg-paper-sunk px-3 py-1.5">
         <h2 className="colhead">{title}</h2>
         {meta ? <span className="text-[0.6875rem] text-ink-soft">{meta}</span> : null}
@@ -45,15 +51,32 @@ function Panel({
   );
 }
 
+function severityLabel(sev: "boxed" | "contraindicated" | "warning" | "interaction"): {
+  word: string;
+  cls: string;
+} {
+  if (sev === "boxed" || sev === "contraindicated") return { word: "Boxed", cls: "text-tier-out" };
+  if (sev === "warning") return { word: "Watch", cls: "text-tier-watch" };
+  return { word: "Reliable", cls: "text-tier-reliable" };
+}
+
 export function CaseView() {
   const { caseState, role, actions, partnerKey, stream, error } = useCase();
 
   const [busy, setBusy] = useState<string | null>(null);
-  const [itemText, setItemText] = useState("");
-  const [reason, setReason] = useState("");
-  const [note, setNote] = useState("");
+  const [proposeKind, setProposeKind] = useState<ChangeProposal["kind"]>("hold");
+  const [proposeMedId, setProposeMedId] = useState("");
+  const [proposeValue, setProposeValue] = useState("");
+  const [proposeReason, setProposeReason] = useState("");
+  const [counselText, setCounselText] = useState("");
+  const [noteText, setNoteText] = useState("");
+  const [newMed, setNewMed] = useState({ generic: "", dose: "", schedule: "", prescriber: "" });
 
   const pending = caseState.proposals.filter((p) => p.status === "pending");
+  const activeGenerics = caseState.medications
+    .filter((m) => m.status === "active")
+    .map((m) => m.generic);
+  const flags = useMemo(() => checkInteractions(activeGenerics), [activeGenerics]);
 
   const guard = async (key: string, fn: () => Promise<unknown>) => {
     setBusy(key);
@@ -68,27 +91,27 @@ export function CaseView() {
 
   return (
     <div>
-      {/* The two roles must be unmistakable from across a room, not from a label. */}
       {role === "partner" ? (
         <div className="border-b border-ink bg-ink text-paper" data-testid="role-banner">
           <div className="mx-auto flex w-full max-w-[1360px] flex-wrap items-baseline justify-between gap-x-8 gap-y-2 px-4 py-4 sm:px-8">
             <div>
-              <h1 className="plate text-[1.5rem] sm:text-[1.875rem]">Partner view</h1>
-              <p className="plate mt-1 text-[1.0625rem] text-paper/80">{caseState.title}</p>
+              <h1 className="plate text-[1.5rem] sm:text-[1.875rem]">You Are the Pharmacist</h1>
+              <p className="plate mt-1 text-[1.0625rem] text-paper/80">
+                {caseState.patientLabel}, age <span className="num">{caseState.patientAge}</span>
+              </p>
             </div>
             <p className="max-w-sm text-[0.8125rem] leading-snug text-paper/75">
-              You are watching someone else&rsquo;s case. You can propose a change and add notes.
-              The accept tool is not registered in this window, and the server refuses an accept
-              from this session.
+              You can propose a change and add counsel notes. The accept tool is not registered in
+              this window, and the server refuses an accept from this session.
             </p>
           </div>
         </div>
       ) : null}
 
-      <div className="mx-auto w-full max-w-[1360px] px-4 pb-24 sm:px-8">
+      <div className="mx-auto w-full max-w-[1360px] px-4 pb-16 sm:px-8">
         <header className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2 border-b border-ink py-3">
           <Link href="/" className="plate text-[1.0625rem] hover:text-accent">
-            webmcp-two-agent-spine
+            Pill Round
           </Link>
           <div className="flex flex-wrap items-center gap-4">
             <StreamDot state={stream} />
@@ -98,11 +121,14 @@ export function CaseView() {
 
         {role === "owner" ? (
           <div className="border-b border-hair py-4" data-testid="role-banner">
-            <p className="colhead">You are the owner</p>
-            <h1 className="plate mt-1.5 text-[clamp(1.5rem,3.6vw,2.25rem)] text-balance">{caseState.title}</h1>
+            <p className="colhead">You Are the Caregiver</p>
+            <h1 className="plate mt-1.5 text-[clamp(1.5rem,3.6vw,2.25rem)] text-balance">
+              {caseState.patientLabel}, age <span className="num">{caseState.patientAge}</span>
+            </h1>
             <p className="mt-1.5 max-w-xl text-[0.8125rem] leading-snug text-ink-soft">
-              You add items directly and accept any proposal. Your agent holds add_item,
-              accept_change, share_case and report_form; the partner&rsquo;s never does.
+              You add medications directly and accept any proposal. Your agent holds
+              add_medication, accept_change, print_round_card and report_side_effect; the
+              pharmacist&rsquo;s never does.
             </p>
           </div>
         ) : null}
@@ -111,152 +137,353 @@ export function CaseView() {
           <p
             role="alert"
             aria-live="polite"
-            className="mt-3 border border-tier-unreliable bg-paper-sunk px-3 py-2 text-[0.8125rem] font-medium text-tier-unreliable"
+            className="mt-3 border border-tier-out bg-paper-sunk px-3 py-2 text-[0.8125rem] font-medium text-tier-out"
           >
             {error}
           </p>
         ) : null}
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-          {/* ------------------------------- items ------------------------------- */}
-          <section aria-label="Items" className="flex flex-col gap-5">
-            {role === "owner" ? (
-              <form
-                className="flex gap-2"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (!itemText.trim()) return;
-                  const text = itemText.trim();
-                  setItemText("");
-                  void guard("add-item", () => actions.addItem(text));
-                }}
-              >
-                <input
-                  value={itemText}
-                  onChange={(e) => setItemText(e.target.value)}
-                  placeholder="Add an item…"
-                  aria-label="Add an item to the case"
-                  className="flex-1 rounded-control border border-hair-strong bg-paper px-2.5 py-2 text-[0.875rem] focus:border-accent"
-                  data-testid="item-input"
-                />
-                <Button type="submit" variant="primary" disabled={busy !== null}>
-                  Add
-                </Button>
-              </form>
-            ) : (
-              <label className="block">
-                <span className="colhead">propose an item, and why</span>
-                <div className="mt-1.5 flex flex-col gap-2 sm:flex-row">
+          {/* ------------------------------- left column ------------------------------- */}
+          <section aria-label="Medications and flags" className="flex flex-col gap-5">
+            <Panel
+              title="Medication List"
+              meta={<span className="num">{caseState.medications.length} meds</span>}
+            >
+              {role === "owner" ? (
+                <form
+                  className="flex flex-wrap gap-2 border-b border-hair bg-paper-sunk px-3 py-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!newMed.generic.trim()) return;
+                    const med = { ...newMed, generic: newMed.generic.trim().toLowerCase() };
+                    setNewMed({ generic: "", dose: "", schedule: "", prescriber: "" });
+                    void guard("add-med", () =>
+                      actions.addMedication(med.generic, med.dose, med.schedule, med.prescriber),
+                    );
+                  }}
+                >
                   <input
-                    value={itemText}
-                    onChange={(e) => setItemText(e.target.value)}
-                    placeholder="Item to add…"
-                    className="flex-1 rounded-control border border-hair-strong bg-paper px-3 py-2 text-[0.875rem] focus:border-accent"
-                    data-testid="propose-text"
+                    value={newMed.generic}
+                    onChange={(e) => setNewMed((m) => ({ ...m, generic: e.target.value }))}
+                    placeholder="Generic…"
+                    aria-label="New medication generic name"
+                    className="min-w-0 flex-1 rounded-control border border-hair-strong bg-paper px-2 py-1.5 text-[0.8125rem] focus:border-accent"
                   />
                   <input
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    placeholder="Why the owner should add it…"
-                    className="flex-1 rounded-control border border-hair-strong bg-paper px-3 py-2 text-[0.875rem] focus:border-accent"
-                    data-testid="propose-reason"
+                    value={newMed.dose}
+                    onChange={(e) => setNewMed((m) => ({ ...m, dose: e.target.value }))}
+                    placeholder="Dose…"
+                    aria-label="New medication dose"
+                    className="w-24 rounded-control border border-hair-strong bg-paper px-2 py-1.5 text-[0.8125rem] focus:border-accent"
                   />
-                  <Button
-                    type="button"
-                    disabled={busy !== null || !itemText.trim() || !reason.trim()}
-                    onClick={() =>
-                      guard("propose", async () => {
-                        await actions.proposeChange(itemText.trim(), reason.trim());
-                        setItemText("");
-                        setReason("");
-                      })
-                    }
-                    data-testid="propose-submit"
-                  >
-                    {busy === "propose" ? "Proposing…" : "Propose"}
+                  <input
+                    value={newMed.schedule}
+                    onChange={(e) => setNewMed((m) => ({ ...m, schedule: e.target.value }))}
+                    placeholder="Schedule…"
+                    aria-label="New medication schedule"
+                    className="w-32 rounded-control border border-hair-strong bg-paper px-2 py-1.5 text-[0.8125rem] focus:border-accent"
+                  />
+                  <input
+                    value={newMed.prescriber}
+                    onChange={(e) => setNewMed((m) => ({ ...m, prescriber: e.target.value }))}
+                    placeholder="Prescriber…"
+                    aria-label="New medication prescriber"
+                    className="w-32 rounded-control border border-hair-strong bg-paper px-2 py-1.5 text-[0.8125rem] focus:border-accent"
+                  />
+                  <Button type="submit" variant="primary" disabled={busy !== null}>
+                    Add
                   </Button>
-                </div>
-              </label>
-            )}
+                </form>
+              ) : null}
 
-            <div className="flex flex-col gap-2">
-              <h2 className="colhead">
-                {caseState.items.length} item{caseState.items.length === 1 ? "" : "s"}
-              </h2>
-              {caseState.items.length === 0 ? (
-                <p className="border border-hair-strong bg-paper px-3 py-3 text-[0.875rem]">
-                  Nothing on this case yet.
+              {caseState.medications.length === 0 ? (
+                <p className="px-3 py-3 text-[0.875rem] text-ink-soft">
+                  No medications on this round yet.
                 </p>
               ) : (
-                <ol className="flex flex-col gap-2">
-                  {caseState.items.map((it) => (
-                    <li
-                      key={it.id}
-                      className="flex items-baseline justify-between gap-3 border border-hair-strong bg-paper px-3 py-2.5"
-                      data-testid={`item-${it.id}`}
+                <table className="w-full border-collapse text-left">
+                  <thead>
+                    <tr className="table-header border-b border-hair-strong bg-paper-sunk">
+                      <th scope="col" className="colhead px-3 py-1.5 font-semibold">Generic</th>
+                      <th scope="col" className="colhead px-2 py-1.5 font-semibold">Brand</th>
+                      <th scope="col" className="colhead px-2 py-1.5 font-semibold">Dose</th>
+                      <th scope="col" className="colhead px-2 py-1.5 font-semibold">Schedule</th>
+                      <th scope="col" className="colhead px-2 py-1.5 font-semibold">Prescriber</th>
+                      <th scope="col" className="colhead px-3 py-1.5 text-right font-semibold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {caseState.medications.map((m: Medication) => (
+                      <tr
+                        key={m.id}
+                        className={`border-b border-hair last:border-b-0 ${m.status !== "active" ? "med-held" : ""}`}
+                        data-testid={`med-${m.id}`}
+                      >
+                        <td className="px-3 py-2 text-[0.875rem]">{m.generic}</td>
+                        <td className="px-2 py-2 text-[0.8125rem] text-ink-soft">{m.brand ?? "—"}</td>
+                        <td className="num px-2 py-2 text-[0.875rem]">{m.dose}</td>
+                        <td className="px-2 py-2 text-[0.8125rem]">{m.schedule}</td>
+                        <td className="px-2 py-2 text-[0.8125rem] text-ink-soft">{m.prescriber}</td>
+                        <td className="px-3 py-2 text-right">
+                          <span
+                            className={`colhead ${
+                              m.status === "active"
+                                ? "text-tier-reliable"
+                                : m.status === "held"
+                                  ? "text-tier-watch"
+                                  : "text-tier-out"
+                            }`}
+                          >
+                            {m.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </Panel>
+
+            <Panel title="Flags" meta={<span className="num">{flags.length}</span>}>
+              {flags.length === 0 ? (
+                <p className="px-3 py-3 text-[0.875rem] text-ink-soft">
+                  No interaction flags found among the active medications.
+                </p>
+              ) : (
+                <ul className="flex flex-col">
+                  {flags.map((f, i) => {
+                    const tier = severityLabel(f.severity);
+                    return (
+                      <li
+                        key={`${f.a}-${f.b}-${i}`}
+                        className="border-b border-hair px-3 py-3 last:border-b-0"
+                        data-testid={`flag-${f.a}-${f.b}`}
+                      >
+                        <div className="flex flex-wrap items-baseline justify-between gap-2">
+                          <span className="plate text-[0.9375rem]">
+                            {f.a} + {f.b}
+                          </span>
+                          <span className={`colhead ${tier.cls}`}>{tier.word}</span>
+                        </div>
+                        {f.sentences.map((s, j) => (
+                          <blockquote
+                            key={j}
+                            className="mt-1.5 border-l-2 border-hair-strong pl-2.5 text-[0.8125rem] leading-snug text-ink-soft"
+                          >
+                            &ldquo;{s.sentence}&rdquo;{" "}
+                            <a
+                              href={`https://api.fda.gov/drug/label.json?search=set_id:${s.setId}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="code text-[0.6875rem] text-accent underline decoration-dotted"
+                            >
+                              {s.setId}
+                            </a>
+                          </blockquote>
+                        ))}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </Panel>
+          </section>
+
+          {/* ------------------------------- right column ------------------------------- */}
+          <section aria-label="Proposals, notes and tools" className="flex flex-col gap-5">
+            <Panel
+              title="Proposals"
+              meta={<span className="num">{pending.length} pending</span>}
+              testId="proposals-heading"
+            >
+              {role === "partner" ? (
+                <form
+                  className="flex flex-col gap-2 border-b border-hair bg-paper-sunk px-3 py-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!proposeReason.trim()) return;
+                    const kind = proposeKind;
+                    const medicationId = proposeMedId || undefined;
+                    const value = proposeValue.trim();
+                    const reason = proposeReason.trim();
+                    let fields: Record<string, unknown> | undefined;
+                    if (kind === "dose" && value) fields = { dose: value };
+                    else if (kind === "time" && value) fields = { schedule: value };
+                    else if ((kind === "substitute" || kind === "add") && value) {
+                      const [generic, dose, schedule, prescriber] = value.split("|").map((s) => s.trim());
+                      fields = { generic, dose, schedule, prescriber };
+                    }
+                    setProposeValue("");
+                    setProposeReason("");
+                    void guard("propose", () =>
+                      actions.proposeChange(kind, reason, medicationId, fields),
+                    );
+                  }}
+                >
+                  <div className="flex flex-wrap gap-2">
+                    <select
+                      value={proposeKind}
+                      onChange={(e) => setProposeKind(e.target.value as ChangeProposal["kind"])}
+                      aria-label="Kind of change to propose"
+                      className="rounded-control border border-hair-strong bg-paper px-2 py-1.5 text-[0.8125rem] focus:border-accent"
                     >
-                      <span className="text-[0.9375rem]">{it.text}</span>
-                      <span className="colhead">{it.by}</span>
+                      <option value="hold">Hold</option>
+                      <option value="dose">Dose</option>
+                      <option value="time">Time</option>
+                      <option value="substitute">Substitute</option>
+                      <option value="stop">Stop</option>
+                      <option value="add">Add</option>
+                    </select>
+                    <select
+                      value={proposeMedId}
+                      onChange={(e) => setProposeMedId(e.target.value)}
+                      aria-label="Target medication"
+                      className="min-w-0 flex-1 rounded-control border border-hair-strong bg-paper px-2 py-1.5 text-[0.8125rem] focus:border-accent"
+                    >
+                      <option value="">No specific medication…</option>
+                      {caseState.medications.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.generic}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <input
+                    value={proposeValue}
+                    onChange={(e) => setProposeValue(e.target.value)}
+                    placeholder="New dose or time; for substitute/add use generic|dose|schedule|prescriber…"
+                    aria-label="New value for this change"
+                    className="rounded-control border border-hair-strong bg-paper px-2 py-1.5 text-[0.8125rem] focus:border-accent"
+                  />
+                  <textarea
+                    value={proposeReason}
+                    onChange={(e) => setProposeReason(e.target.value)}
+                    placeholder="Reason for the caregiver…"
+                    aria-label="Reason for this proposal"
+                    rows={2}
+                    className="rounded-control border border-hair-strong bg-paper px-2 py-1.5 text-[0.8125rem] focus:border-accent"
+                  />
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={busy !== null || !proposeReason.trim()}
+                    data-testid="propose-submit"
+                  >
+                    {busy === "propose" ? "Proposing…" : "Propose Change"}
+                  </Button>
+                </form>
+              ) : null}
+
+              {caseState.proposals.length === 0 ? (
+                <p className="px-3 py-3 text-[0.8125rem] text-ink-soft">
+                  Nothing proposed yet. The pharmacist proposes a change; the caregiver is the
+                  only one who can accept it.
+                </p>
+              ) : (
+                <ul className="flex flex-col">
+                  {caseState.proposals.map((p) => (
+                    <li
+                      key={p.id}
+                      className="border-b border-hair last:border-b-0"
+                      data-testid={`proposal-${p.id}`}
+                    >
+                      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-hair bg-paper-sunk px-3 py-2">
+                        <span className="plate text-[0.9375rem]">{p.kind}</span>
+                        <span
+                          className={`colhead ${
+                            p.status === "pending"
+                              ? "text-tier-watch"
+                              : p.status === "accepted"
+                                ? "text-tier-reliable"
+                                : "text-tier-out"
+                          }`}
+                        >
+                          {p.status}
+                        </span>
+                      </div>
+                      <p className="px-3 py-2 text-[0.875rem]">{p.reason}</p>
+                      {role === "owner" && p.status === "pending" ? (
+                        <div className="flex gap-2 px-3 pb-2">
+                          <Button
+                            type="button"
+                            variant="primary"
+                            disabled={busy !== null}
+                            onClick={() => guard(`ok-${p.id}`, () => actions.acceptChange(p.id))}
+                            data-testid={`accept-proposal-${p.id}`}
+                          >
+                            Accept
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="danger"
+                            disabled={busy !== null}
+                            onClick={() => guard(`no-${p.id}`, () => actions.rejectChange(p.id))}
+                            data-testid={`reject-proposal-${p.id}`}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Panel>
+
+            <Panel title="Counsel Notes" meta={<span className="num">{caseState.counsel.length}</span>}>
+              {caseState.counsel.length === 0 ? (
+                <p className="px-3 py-2.5 text-[0.8125rem] text-ink-soft">
+                  No counsel notes yet.
+                </p>
+              ) : (
+                <ol>
+                  {[...caseState.counsel].reverse().map((e, i) => (
+                    <li key={`${e.at}-${i}`} className="border-b border-hair px-3 py-2 text-[0.8125rem] last:border-b-0">
+                      <time className="code num text-[0.6875rem] text-ink-subtle" dateTime={e.at}>
+                        {new Date(e.at).toLocaleString("en-US", { hour12: false })}
+                      </time>
+                      <p className="mt-0.5 leading-snug">{e.text}</p>
                     </li>
                   ))}
                 </ol>
               )}
-            </div>
+              {role === "partner" ? (
+                <form
+                  className="flex gap-2 border-t border-hair px-3 py-2"
+                  onSubmit={(ev) => {
+                    ev.preventDefault();
+                    if (!counselText.trim()) return;
+                    const text = counselText.trim();
+                    setCounselText("");
+                    void guard("counsel", () => actions.addCounselNote(text));
+                  }}
+                >
+                  <input
+                    value={counselText}
+                    onChange={(e) => setCounselText(e.target.value)}
+                    placeholder="Add a counsel note…"
+                    aria-label="Add a counsel note"
+                    className="flex-1 rounded-control border border-hair-strong bg-paper px-2.5 py-1.5 text-[0.8125rem] focus:border-accent"
+                  />
+                  <Button type="submit" disabled={busy !== null}>
+                    Add
+                  </Button>
+                </form>
+              ) : null}
+            </Panel>
 
-            <div className="flex flex-col gap-3">
-              <h2 className="colhead" data-testid="proposals-heading">
-                {pending.length} pending proposal{pending.length === 1 ? "" : "s"}
-              </h2>
-              {caseState.proposals.length === 0 ? (
-                <p className="text-[0.8125rem] text-ink-soft">
-                  Nothing proposed yet. The partner proposes a change; the owner is the only one
-                  who can accept it.
-                </p>
-              ) : (
-                caseState.proposals.map((p) => (
-                  <div key={p.id} className="border border-hair-strong bg-paper" data-testid={`proposal-${p.id}`}>
-                    <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-hair bg-paper-sunk px-3 py-2">
-                      <span className="plate text-[0.9375rem]">{String(p.payload.text ?? "")}</span>
-                      <span className="colhead">{p.status}</span>
-                    </div>
-                    <p className="px-3 py-2 text-[0.875rem]">{p.reason}</p>
-                    {role === "owner" && p.status === "pending" ? (
-                      <div className="flex gap-2 border-t border-hair px-3 py-2">
-                        <Button
-                          type="button"
-                          variant="primary"
-                          disabled={busy !== null}
-                          onClick={() => guard(`ok-${p.id}`, () => actions.acceptChange(p.id))}
-                          data-testid={`accept-proposal-${p.id}`}
-                        >
-                          Accept
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="danger"
-                          disabled={busy !== null}
-                          onClick={() => guard(`no-${p.id}`, () => actions.rejectChange(p.id))}
-                          data-testid={`reject-proposal-${p.id}`}
-                        >
-                          Reject
-                        </Button>
-                      </div>
-                    ) : null}
-                  </div>
-                ))
-              )}
-            </div>
+            {role === "owner" ? (
+              <RoundCard medications={caseState.medications} onPrint={() => actions.printRoundCard()} />
+            ) : null}
 
             {role === "owner" ? <PartnerLink caseId={caseState.id} partnerKey={partnerKey} /> : null}
-          </section>
 
-          {/* -------------------------------- board -------------------------------- */}
-          <section aria-label="Case board" className="flex flex-col gap-5">
-            <Panel title="shared timeline" meta={<span className="num">{caseState.notes.length} entries</span>}>
+            <Panel title="Timeline" meta={<span className="num">{caseState.notes.length} entries</span>}>
               <ol className="max-h-80 overflow-y-auto" data-testid="timeline">
                 {caseState.notes.length === 0 ? (
                   <li className="px-3 py-2.5 text-[0.8125rem] text-ink-soft">
-                    Nothing has happened on this case yet.
+                    Nothing has happened on this round yet.
                   </li>
                 ) : (
                   [...caseState.notes].reverse().map((e, i) => (
@@ -279,15 +506,15 @@ export function CaseView() {
                 className="flex gap-2 border-t border-hair px-3 py-2"
                 onSubmit={(ev) => {
                   ev.preventDefault();
-                  if (!note.trim()) return;
-                  const text = note.trim();
-                  setNote("");
+                  if (!noteText.trim()) return;
+                  const text = noteText.trim();
+                  setNoteText("");
                   void guard("note", () => actions.addNote(text));
                 }}
               >
                 <input
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
                   placeholder="Add a note both windows can read…"
                   aria-label="Add a note to the shared timeline"
                   className="flex-1 rounded-control border border-hair-strong bg-paper px-2.5 py-1.5 text-[0.8125rem] focus:border-accent"
@@ -300,25 +527,83 @@ export function CaseView() {
             </Panel>
 
             {caseState.reports.length > 0 ? (
-              <Panel title="reports" meta={<span className="num">{caseState.reports.length}</span>}>
+              <Panel title="Side-Effect Reports" meta={<span className="num">{caseState.reports.length}</span>}>
                 <ul>
                   {caseState.reports.map((r) => (
                     <li key={r.id} className="border-b border-hair px-3 py-2.5 text-[0.8125rem] last:border-b-0">
-                      <div className="plate text-[0.9375rem]">{r.subject}</div>
-                      <p className="mt-0.5 text-ink-soft">{r.description}</p>
+                      <div className="plate text-[0.9375rem]">{r.description}</div>
+                      <p className="mt-0.5 text-ink-soft">
+                        onset {r.onset} · severity {r.severity}
+                      </p>
                     </li>
                   ))}
                 </ul>
               </Panel>
             ) : null}
 
-            {role === "owner" ? <ReportForm actions={actions} /> : null}
-
             <WebMCPTools role={role} caseState={caseState} actions={actions} partnerKey={partnerKey} reportForm={false} />
           </section>
         </div>
+
+        <Footer />
       </div>
     </div>
+  );
+}
+
+/** Latest medication list rendered as a printable grid: medication x time-of-day. */
+function RoundCard({
+  medications,
+  onPrint,
+}: {
+  medications: Medication[];
+  onPrint: () => void;
+}) {
+  const active = medications.filter((m) => m.status === "active");
+  return (
+    <section className="round-card border border-hair-strong bg-paper">
+      <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-hair bg-paper-sunk px-3 py-1.5">
+        <h2 className="colhead">Round Card</h2>
+        <Button type="button" variant="accent" onClick={onPrint} data-testid="print-round-card">
+          Print
+        </Button>
+      </header>
+      {active.length === 0 ? (
+        <p className="px-3 py-3 text-[0.875rem] text-ink-soft">No active medications to print.</p>
+      ) : (
+        <table className="w-full border-collapse text-left">
+          <thead>
+            <tr className="border-b border-hair-strong bg-paper-sunk">
+              <th scope="col" className="colhead px-3 py-1.5 font-semibold">Medication</th>
+              {TIME_SLOTS.map((t) => (
+                <th key={t} scope="col" className="colhead px-2 py-1.5 text-center font-semibold">
+                  {t}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {active.map((m) => (
+              <tr key={m.id} className="border-b border-hair last:border-b-0">
+                <td className="px-3 py-2 text-[0.875rem]">
+                  {m.generic} <span className="num text-ink-soft">{m.dose}</span>
+                </td>
+                {TIME_SLOTS.map((t) => (
+                  <td
+                    key={t}
+                    className={`round-card-cell num border-l border-hair px-2 py-2 text-center text-[0.8125rem] ${
+                      m.schedule.toLowerCase().includes(t.toLowerCase()) ? "bg-accent-soft" : ""
+                    }`}
+                  >
+                    {m.schedule.toLowerCase().includes(t.toLowerCase()) ? "●" : ""}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </section>
   );
 }
 

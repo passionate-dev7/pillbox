@@ -15,17 +15,16 @@ import type { CaseActions } from "@/lib/webmcp/contracts";
 import { unspotlight } from "@/lib/spotlight";
 
 /**
- * The case SSE stream spotlights free text the same way the `get_case` tool does, so any other
- * reader of that endpoint gets the untrusted-content boundary. This page is a trusted first-party
- * human reader, not a model, so it undoes the wrapping before the text ever reaches a component:
- * a person should see their note, not `<untrusted-user-text>` markup around it. `initialCase`
- * (server-rendered, via plain `stripKeys`) never carried the wrapper in the first place;
- * `unspotlight` is a no-op on text that isn't wrapped, so re-applying it here is safe either way.
+ * The case SSE stream spotlights free text the same way a get_case tool result does, so any
+ * other reader of that endpoint gets the untrusted-content boundary. This page is a trusted
+ * first-party human reader, not a model, so it undoes the wrapping before the text ever reaches
+ * a component.
  */
 function unspotlightCase(caseState: CaseState): CaseState {
   return {
     ...caseState,
     notes: caseState.notes.map((n) => ({ ...n, text: unspotlight(n.text) })),
+    counsel: caseState.counsel.map((n) => ({ ...n, text: unspotlight(n.text) })),
     reports: caseState.reports.map((r) => ({ ...r, description: unspotlight(r.description) })),
     proposals: caseState.proposals.map((p) => ({ ...p, reason: unspotlight(p.reason) })),
   };
@@ -35,7 +34,7 @@ export type CaseContextValue = {
   caseState: CaseState;
   role: Role;
   actions: CaseActions;
-  /** The partner's capability key, known to the owner session only, once. */
+  /** The caregiver's one-time view of the pharmacist's key, known to the caregiver session only. */
   partnerKey?: string;
   stream: "connecting" | "open" | "closed";
   error: string | null;
@@ -79,7 +78,7 @@ export function CaseProvider({
   role: Role;
   /** This session's own capability key (the `?k=` it opened with). Sent with every action. */
   sessionKey: string;
-  /** The owner session's one-time view of the partner's key, for PartnerLink and share_case. */
+  /** The caregiver session's one-time view of the pharmacist's key, for the share link. */
   partnerKey?: string;
   initialCase: CaseState;
   children: ReactNode;
@@ -95,10 +94,6 @@ export function CaseProvider({
     setCaseState(unspotlightCase(next));
   }, []);
 
-  /*
-   * Case SSE: the owner sees the partner's proposal without reloading, in a background tab as
-   * much as a foreground one, so this stream is never dropped while the page is open.
-   */
   useEffect(() => {
     let stopped = false;
     let source: EventSource | null = null;
@@ -166,16 +161,21 @@ export function CaseProvider({
           error?: string;
         };
         if (!res.ok || !body.case || !body.ownerUrl || !body.partnerUrl) {
-          throw new Error(body.error ?? `Creating the case failed with HTTP ${res.status}.`);
+          throw new Error(body.error ?? `Creating the round failed with HTTP ${res.status}.`);
         }
         return { ...body.case, ownerUrl: body.ownerUrl, partnerUrl: body.partnerUrl };
       },
-      addItem: (text) => run("add_item", { text }),
-      proposeChange: (text, reason) => run("propose_change", { text, reason }),
+      addMedication: (generic, dose, schedule, prescriber) =>
+        run("add_medication", { generic, dose, schedule, prescriber }),
+      proposeChange: (kind, reason, medicationId, fields) =>
+        run("propose_change", { kind, reason, medicationId, ...(fields ?? {}) }),
       acceptChange: (proposalId) => run("accept_change", { proposalId }),
       rejectChange: (proposalId) => run("accept_change", { proposalId, decision: "reject" }),
+      addCounselNote: (text) => run("add_counsel_note", { text }),
       addNote: (text) => run("add_note", { text }),
-      report: (subject, description) => run("report", { subject, description }),
+      reportSideEffect: (description, onset, severity, medicationId) =>
+        run("report_side_effect", { description, onset, severity, medicationId }),
+      printRoundCard: () => run("print_round_card", {}),
     }),
     [run],
   );

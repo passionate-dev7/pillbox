@@ -4,16 +4,16 @@ export default function CaseNotFound() {
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-20 sm:px-8">
       <p className="colhead">404</p>
-      <h1 className="plate mt-2 text-[clamp(1.75rem,5vw,2.75rem)]">No case at this link</h1>
+      <h1 className="plate mt-2 text-[clamp(1.75rem,5vw,2.75rem)]">No Round at This Link</h1>
       <p className="mt-4 max-w-prose text-[1rem] leading-snug">
-        That case id is not in the store. A case lives in the shared state store, not in the URL,
-        so a partner link only works while the case it points at exists.
+        That round id is not in the store. A round lives in the shared state store, not in the
+        URL, so a pharmacist link only works while the round it points at exists.
       </p>
       <Link
         href="/"
         className="mt-8 inline-flex items-center rounded-control bg-accent px-5 py-2.5 text-[0.9375rem] font-semibold text-paper transition-transform duration-150 hover:bg-accent-ink active:scale-[0.97]"
       >
-        Start a case
+        Start a Round
       </Link>
     </main>
   );

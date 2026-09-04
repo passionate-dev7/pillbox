@@ -18,11 +18,11 @@ export async function generateMetadata({ params, searchParams }: PageProps<"/c/[
   const { caseId } = await params;
   const sp = await searchParams;
   const caseState = await getCase(caseId);
-  if (!caseState) return { title: "webmcp-two-agent-spine: no case at this link" };
-  const view = roleForKey(caseState, keyFrom(sp)) ?? "invalid link";
+  if (!caseState) return { title: "No round at this link" };
+  const view = roleForKey(caseState, keyFrom(sp)) === "owner" ? "caregiver" : roleForKey(caseState, keyFrom(sp)) === "partner" ? "pharmacist" : "invalid link";
   return {
-    title: `${caseState.title}, ${view} view`,
-    description: `A shared case, owner and partner each with their own WebMCP tool set.`,
+    title: `${caseState.patientLabel}, ${view} view`,
+    description: `A shared medication round, caregiver and pharmacist each with their own WebMCP tool set.`,
   };
 }
 

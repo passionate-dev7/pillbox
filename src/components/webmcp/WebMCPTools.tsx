@@ -7,7 +7,7 @@ import { subscribeToolLog, getToolLog, whenToolsIdle, type ToolLogEntry } from "
 import { registerTools, type RegisteredInfo, type RegistrationTarget } from "@/lib/webmcp/register";
 import { ensureModelContext, type WebMcpLayer } from "@/lib/webmcp/runtime";
 import { ConfirmCard } from "@/components/webmcp/ConfirmCard";
-import { ReportForm } from "@/components/webmcp/ReportForm";
+import { SideEffectForm } from "@/components/webmcp/SideEffectForm";
 
 /**
  * `@mcp-b/webmcp-types` types `execute` as `(input) => ...` because that is what the polyfill
@@ -31,7 +31,7 @@ export type WebMCPToolsProps = {
   headless?: boolean;
   /**
    * Render the declarative report_form here. Owner sessions only.
-   * Set false and mount <ReportForm> yourself to place it elsewhere on the page.
+   * Set false and mount <SideEffectForm> yourself to place it elsewhere on the page.
    */
   reportForm?: boolean;
 };
@@ -139,7 +139,9 @@ export function WebMCPTools({
   const gate = (
     <>
       <ConfirmCard />
-      {reportForm && role === "owner" && caseState && <ReportForm actions={actions} />}
+      {reportForm && role === "owner" && caseState && (
+        <SideEffectForm reportSideEffect={actions.reportSideEffect} />
+      )}
     </>
   );
 
