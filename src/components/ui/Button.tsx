@@ -3,20 +3,20 @@ import type { ButtonHTMLAttributes } from "react";
 type Variant = "primary" | "solid" | "outline" | "danger" | "accent";
 
 /**
- * Round-card buttons: a rectangular plate with a hairline, no gradient, no shadow.
- * `primary` is ink; `accent` is the one clinical-teal button per screen. Press is a
- * 3% squeeze, nothing else moves.
+ * Round-card buttons: 8px radius, a hairline border, no gradient. `primary` is the one
+ * emerald button per screen; `outline` is the ghost secondary. Press is a 3% squeeze,
+ * nothing else moves.
  */
 const VARIANTS: Record<Variant, string> = {
   primary:
-    "bg-ink text-paper border-ink hover:bg-ink-soft hover:border-ink-soft",
-  solid: "bg-ink text-paper border-ink hover:bg-ink-soft hover:border-ink-soft",
+    "bg-primary text-on-primary border-primary hover:bg-primary-deep hover:border-primary-deep",
+  solid: "bg-ink text-on-dark border-ink hover:bg-ink-mute hover:border-ink-mute",
   outline:
-    "bg-paper text-ink border-hair-strong hover:border-ink hover:bg-paper-sunk",
+    "bg-canvas text-ink border-hair-strong hover:border-ink hover:bg-canvas-soft",
   danger:
-    "bg-paper text-tier-out border-hair-strong hover:border-tier-out hover:bg-tier-out hover:text-paper",
+    "bg-canvas text-tier-out border-hair-strong hover:border-tier-out hover:bg-tier-out hover:text-on-dark",
   accent:
-    "bg-accent text-paper border-accent hover:bg-accent-ink hover:border-accent-ink",
+    "bg-primary text-on-primary border-primary hover:bg-primary-deep hover:border-primary-deep",
 };
 
 export function Button({

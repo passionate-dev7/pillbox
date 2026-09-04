@@ -1,21 +1,21 @@
 import type { Metadata } from "next";
-import { Archivo, IBM_Plex_Mono } from "next/font/google";
+import { Manrope, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-/** Archivo is the grotesk this DESIGN.md pins as the display face; it ships a width axis. */
-const archivo = Archivo({
+/** Manrope is the humanist sans this DESIGN.md pins for display and body. */
+const manrope = Manrope({
   subsets: ["latin"],
-  axes: ["wdth"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
-  variable: "--font-archivo",
+  variable: "--font-manrope",
 });
 
-/** Ids, timestamps and tool names are set like a maintenance tag, not body copy. */
-const plexMono = IBM_Plex_Mono({
+/** Doses, times, and set_ids are set like a lab tag, not body copy. */
+const jbMono = JetBrains_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   display: "swap",
-  variable: "--font-plex-mono",
+  variable: "--font-jbmono",
 });
 
 export const metadata: Metadata = {
@@ -29,8 +29,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${archivo.variable} ${plexMono.variable} h-full`}>
-      <body className="min-h-full bg-paper text-ink antialiased">{children}</body>
+    <html lang="en" className={`${manrope.variable} ${jbMono.variable} h-full`}>
+      <body className="min-h-full bg-canvas text-ink antialiased">{children}</body>
     </html>
   );
 }

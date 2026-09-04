@@ -9,9 +9,9 @@ export function PartnerLink({ caseId, partnerKey }: { caseId: string; partnerKey
 
   if (!partnerKey) {
     return (
-      <section className="border border-hair-strong bg-paper">
-        <h2 className="colhead border-b border-hair bg-paper-sunk px-3 py-1.5">Pharmacist Link</h2>
-        <p className="px-3 py-2.5 text-[0.75rem] leading-snug text-ink-soft">
+      <section className="rounded-control border border-hair bg-canvas shadow-[0_1px_2px_rgba(0,0,0,.06)]">
+        <h2 className="colhead border-b border-hair bg-canvas-soft px-3 py-1.5">Pharmacist Link</h2>
+        <p className="px-3 py-2.5 text-[0.75rem] leading-snug text-ink-mute">
           The pharmacist key for this round is not available in this session.
         </p>
       </section>
@@ -22,10 +22,10 @@ export function PartnerLink({ caseId, partnerKey }: { caseId: string; partnerKey
   const href = typeof window === "undefined" ? path : `${window.location.origin}${path}`;
 
   return (
-    <section className="border border-hair-strong bg-paper">
-      <h2 className="colhead border-b border-hair bg-paper-sunk px-3 py-1.5">Pharmacist Link</h2>
+    <section className="rounded-control border border-hair bg-canvas shadow-[0_1px_2px_rgba(0,0,0,.06)]">
+      <h2 className="colhead border-b border-hair bg-canvas-soft px-3 py-1.5">Pharmacist Link</h2>
       <div className="flex flex-wrap items-center gap-2 px-3 py-2.5">
-        <code className="code min-w-0 flex-1 break-all text-[0.6875rem] text-ink-soft">{href}</code>
+        <code className="code min-w-0 flex-1 break-all text-[0.6875rem] text-ink-mute">{href}</code>
         <Button
           type="button"
           onClick={async () => {
@@ -42,12 +42,12 @@ export function PartnerLink({ caseId, partnerKey }: { caseId: string; partnerKey
         </Button>
         <a
           href={path}
-          className="inline-flex items-center rounded-control border border-hair-strong bg-paper px-3.5 py-2 text-[0.8125rem] font-semibold transition-colors duration-150 hover:border-ink"
+          className="inline-flex items-center rounded-control border border-hair-strong bg-canvas px-3.5 py-2 text-[0.8125rem] font-semibold transition-colors duration-150 hover:border-ink"
         >
           Open
         </a>
       </div>
-      <p className="border-t border-hair px-3 py-2 text-[0.75rem] leading-snug text-ink-soft">
+      <p className="border-t border-hair px-3 py-2 text-[0.75rem] leading-snug text-ink-mute">
         Whoever opens this gets the pharmacist session. Their agent can propose a change and add
         counsel notes, the accept tool is never registered in that window, and the server rejects
         an accept from a pharmacist even if one is forged.

@@ -103,7 +103,7 @@ export function SideEffectForm({ reportSideEffect }: { reportSideEffect: ReportS
           name="medicationId"
           toolparamdescription="The id of the medication this side effect relates to, if known."
           placeholder="med id…"
-          className="mt-1 block w-full rounded-control border border-hair-strong bg-paper px-2.5 py-2 text-[0.9375rem] font-normal focus:border-accent"
+          className="mt-1 block w-full rounded-control border border-hair-strong bg-canvas px-2.5 py-2 text-[0.9375rem] font-normal focus:border-primary"
         />
       </label>
 
@@ -115,7 +115,7 @@ export function SideEffectForm({ reportSideEffect }: { reportSideEffect: ReportS
           rows={3}
           toolparamdescription="A plain description of the side effect observed."
           placeholder="Felt dizzy after the morning dose…"
-          className="mt-1 block w-full rounded-control border border-hair-strong bg-paper px-2.5 py-2 text-[0.9375rem] font-normal focus:border-accent"
+          className="mt-1 block w-full rounded-control border border-hair-strong bg-canvas px-2.5 py-2 text-[0.9375rem] font-normal focus:border-primary"
         />
       </label>
 
@@ -127,7 +127,7 @@ export function SideEffectForm({ reportSideEffect }: { reportSideEffect: ReportS
             required
             toolparamdescription="When it started, e.g. 'about 30 minutes after the dose'."
             placeholder="30 minutes after dose…"
-            className="mt-1 block w-full rounded-control border border-hair-strong bg-paper px-2.5 py-2 text-[0.9375rem] font-normal focus:border-accent"
+            className="mt-1 block w-full rounded-control border border-hair-strong bg-canvas px-2.5 py-2 text-[0.9375rem] font-normal focus:border-primary"
           />
         </label>
         <label className="block text-[0.8125rem] font-semibold">
@@ -137,14 +137,14 @@ export function SideEffectForm({ reportSideEffect }: { reportSideEffect: ReportS
             required
             toolparamdescription="How severe it was, e.g. 'mild', 'moderate', 'severe'."
             placeholder="mild…"
-            className="mt-1 block w-full rounded-control border border-hair-strong bg-paper px-2.5 py-2 text-[0.9375rem] font-normal focus:border-accent"
+            className="mt-1 block w-full rounded-control border border-hair-strong bg-canvas px-2.5 py-2 text-[0.9375rem] font-normal focus:border-primary"
           />
         </label>
       </div>
 
       <button
         type="submit"
-        className={`${styles.submit} mt-4 w-full rounded-control bg-accent px-4 py-2.5 text-[0.9375rem] font-semibold text-paper transition-transform duration-150 active:scale-[0.97]`}
+        className={`${styles.submit} mt-4 w-full rounded-control bg-primary px-4 py-2.5 text-[0.9375rem] font-semibold text-on-primary transition-transform duration-150 active:scale-[0.97]`}
       >
         Send Report
       </button>

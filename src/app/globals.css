@@ -1,12 +1,13 @@
 @import "tailwindcss";
 
 /*
- * Pill Round reads as a pharmacy round card / MAR sheet on paper, not a dashboard.
- * Every colour here is a meaning: a clinical severity tier or the fact that a dose is out.
+ * Pill Round reads as a modern clinical app: white body, near-black ink, one emerald
+ * primary, and a single dark header band per round. Every colour here is a meaning: a
+ * clinical severity tier or the fact that a role is a caregiver vs a pharmacist.
  * Nothing is decoration.
  *
  * Tokens live in one @theme block. Components reference the semantic name
- * (bg-paper, text-ink, border-hair, text-tier-out), never a raw hex.
+ * (bg-canvas, text-ink, border-hair, text-tier-out), never a raw hex.
  */
 
 @theme {
@@ -14,49 +15,56 @@
   --font-sans: ui-sans-serif, system-ui, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-  /* Surface: warm off-white MAR card stock, near-black ink. Never #fff, never #000. */
-  --color-paper: #f2efe9;
-  --color-paper-sunk: #ece8dc;
-  --color-paper-inset: #e4dfce;
-  --color-ink: #0a0a0a;
-  --color-ink-soft: #4a4a46;
-  --color-ink-subtle: #7a776d;
-  --color-hair: #ddd8c8;
-  --color-hair-strong: #b8b29c;
+  /* Surface: white canvas, near-black ink. Never pure #fff/#000 for text pairs. */
+  --color-canvas: #ffffff;
+  --color-canvas-soft: #fafafa;
+  --color-canvas-night: #1c1c1c;
+  --color-canvas-night-soft: #242424;
+  --color-ink: #171717;
+  --color-ink-mute: #707070;
+  --color-ink-faint: #9a9a9a;
+  --color-hair: #e5e7eb;
+  --color-hair-strong: #c7c7c7;
 
-  /* One accent: clinical teal. Interactive only, never body text. */
-  --color-accent: #0b6e6e;
-  --color-accent-soft: #dcedeb;
-  --color-accent-ink: #084f4f;
+  /* One primary: emerald. Interactive fills and the role chip only, never body text. */
+  --color-primary: #3ecf8e;
+  --color-primary-deep: #24b47e;
+  --color-primary-soft: #ecfdf3;
+  --color-on-primary: #171717;
+  --color-on-dark: #ffffff;
 
-  /* Severity tiers, all AA on the surface (DESIGN.md contrast table). */
-  --color-tier-reliable: #0c6b3d;
-  --color-tier-watch: #8a5a00;
-  --color-tier-out: #7a1010;
-  --color-tier-unknown: #4a4a46;
+  /* Severity tiers, all AA on canvas (DESIGN.md contrast table). */
+  --color-tier-reliable: #067647;
+  --color-tier-reliable-soft: #ecfdf3;
+  --color-tier-watch: #b54708;
+  --color-tier-watch-soft: #fffaeb;
+  --color-tier-out: #b42318;
+  --color-tier-out-soft: #fef2f1;
+  --color-tier-held: #9a9a9a;
+  --color-tier-unknown: #707070;
 
   /* A simulated / demo control is never mistaken for a real one. */
-  --color-sim: #6c2bd9;
+  --color-sim: #6b01c2;
 
-  /* Square corners on panels and chips; 2px only on things you type in or press. */
-  --radius-plate: 0px;
-  --radius-control: 2px;
+  /* 8px radius everywhere: cards, buttons, inputs. */
+  --radius-plate: 8px;
+  --radius-control: 8px;
 }
 
 /*
- * next/font defines --font-archivo / --font-plex-mono on the element carrying its
+ * next/font defines --font-manrope / --font-jbmono on the element carrying its
  * className, which is <html>. Binding --font-sans here rather than in :root is the
- * difference between Archivo and a silent serif fallback.
+ * difference between Manrope and a silent system fallback.
  */
 html {
-  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, Arial, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, Menlo, Consolas, monospace;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, Arial, sans-serif;
+  --font-mono: var(--font-jbmono), ui-monospace, Menlo, Consolas, monospace;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 body {
-  background: var(--color-paper);
+  background: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-synthesis-weight: none;
@@ -69,33 +77,32 @@ body {
     font-feature-settings: "tnum" 1;
   }
 
-  /* Patient label, med names: the condensed, tight setting of a chart header. */
+  /* Patient label, med names: a tight display setting, not body copy. */
   .plate {
-    font-stretch: 88%;
-    letter-spacing: -0.02em;
-    font-weight: 650;
-    line-height: 1.02;
+    letter-spacing: -0.01em;
+    font-weight: 700;
+    line-height: 1.1;
   }
 
-  /* Timestamps and set_ids: a chart tag, not body copy. */
+  /* Timestamps and set_ids: a mono chart tag, not body copy. */
   .code {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.01em;
   }
 
-  /* A column heading on a round card. Used sparingly, never stacked on an h2. */
+  /* A column heading or panel label. Used sparingly, never stacked on an h2. */
   .colhead {
     font-size: 0.6875rem;
-    font-weight: 600;
+    font-weight: 700;
     line-height: 1.2;
-    letter-spacing: 0.13em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--color-ink-soft);
+    color: var(--color-ink-mute);
   }
 
   :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-    outline: 3px solid var(--color-accent);
+    outline: 3px solid var(--color-primary-deep);
     outline-offset: 2px;
   }
 
@@ -107,14 +114,14 @@ body {
   /* Only paint a selection when one exists: an empty picker must not look picked. */
   select[size]:not([data-empty="true"]) option:checked {
     background: var(--color-ink);
-    color: var(--color-paper);
+    color: var(--color-canvas);
   }
 }
 
 /* A held or stopped medication row is struck through, not hidden. */
 .med-held {
   text-decoration: line-through;
-  color: var(--color-ink-subtle);
+  color: var(--color-ink-faint);
 }
 
 /* Provenance: a dotted value you can click or tab to for the query behind it. */

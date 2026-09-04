@@ -154,21 +154,21 @@ export function WebMCPTools({
         data-webmcp-panel
         data-webmcp-layer={layer}
         data-webmcp-role={role}
-        className="border border-hair-strong bg-paper"
+        className="rounded-control border border-hair bg-canvas shadow-[0_1px_2px_rgba(0,0,0,.06)]"
       >
-        <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-hair bg-paper-sunk px-3 py-1.5">
+        <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-hair bg-canvas-soft px-3 py-1.5">
           <h2 className="colhead">tools registered in this window</h2>
           <span className="flex items-baseline gap-2 text-[0.6875rem]">
             <span
               className={`code px-1 py-px text-[0.625rem] uppercase tracking-[0.1em] ${
                 layer === "unavailable"
-                  ? "border border-hair-strong text-ink-soft"
-                  : "bg-accent text-paper"
+                  ? "border border-hair-strong text-ink-mute"
+                  : "bg-primary text-on-primary"
               }`}
             >
               {layer}
             </span>
-            <span className="num text-ink-soft">
+            <span className="num text-ink-mute">
               {role} · {registered.length} tools · gen {generation}
             </span>
           </span>
@@ -184,7 +184,7 @@ export function WebMCPTools({
         )}
 
         {registered.length === 0 && layer !== "unavailable" ? (
-          <p className="px-3 py-2.5 text-[0.8125rem] text-ink-soft">
+          <p className="px-3 py-2.5 text-[0.8125rem] text-ink-mute">
             Registering this session&rsquo;s tools…
           </p>
         ) : (
@@ -214,7 +214,7 @@ export function WebMCPTools({
                     />
                   </td>
                   <td className="code py-1 text-[0.75rem]">{t.name}</td>
-                  <td className="py-1 pr-3 text-right text-[0.6875rem] text-ink-soft">
+                  <td className="py-1 pr-3 text-right text-[0.6875rem] text-ink-mute">
                     {t.untrusted ? (
                       <span className="mr-2 border border-tier-watch px-1 text-tier-watch">
                         untrusted output
@@ -229,30 +229,30 @@ export function WebMCPTools({
         )}
 
         {browserTools.length > 0 && (
-          <p className="code border-t border-hair px-3 py-1.5 text-[0.6875rem] leading-relaxed text-ink-subtle">
+          <p className="code border-t border-hair px-3 py-1.5 text-[0.6875rem] leading-relaxed text-ink-faint">
             document.modelContext.getTools() → {browserTools.join(", ")}
           </p>
         )}
 
         <div className="border-t border-hair-strong">
-          <h3 className="colhead border-b border-hair bg-paper-sunk px-3 py-1.5">
+          <h3 className="colhead border-b border-hair bg-canvas-soft px-3 py-1.5">
             tool log · <span className="num">{log.length}</span>
           </h3>
           {log.length === 0 ? (
-            <p className="px-3 py-2.5 text-[0.8125rem] text-ink-soft">
+            <p className="px-3 py-2.5 text-[0.8125rem] text-ink-mute">
               No tool call has come in yet. Ask the agent to add or propose something and the
               first line lands here.
             </p>
           ) : (
-            <ol className="max-h-72 overflow-y-auto bg-ink text-paper">
+            <ol className="max-h-72 overflow-y-auto bg-canvas-night text-on-dark">
               {log.map((e) => (
-                <li key={e.id} className="code border-b border-paper/10 px-3 py-1.5 text-[0.6875rem] leading-relaxed last:border-b-0">
-                  <span className={e.ok ? "text-paper/50" : "text-paper"} aria-hidden>
+                <li key={e.id} className="code border-b border-on-dark/10 px-3 py-1.5 text-[0.6875rem] leading-relaxed last:border-b-0">
+                  <span className={e.ok ? "text-on-dark/50" : "text-on-dark"} aria-hidden>
                     {e.ok ? "$" : "!"}
                   </span>{" "}
                   <span className="font-medium">{e.name}</span>{" "}
-                  <span className="num text-paper/50">{e.durationMs}ms</span>
-                  <div className="break-all text-paper/55">{JSON.stringify(e.args)}</div>
+                  <span className="num text-on-dark/50">{e.durationMs}ms</span>
+                  <div className="break-all text-on-dark/55">{JSON.stringify(e.args)}</div>
                   {!e.ok && <div className="text-tier-watch">{e.error}</div>}
                 </li>
               ))}

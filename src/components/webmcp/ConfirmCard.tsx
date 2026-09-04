@@ -40,23 +40,23 @@ function Card({ pending, depth }: { pending: PendingConfirm; depth: number }) {
       aria-label={pending.title}
       className="fixed inset-x-0 bottom-0 z-50 flex justify-center p-4 sm:p-6"
     >
-      <div className="w-full max-w-xl border-4 border-black bg-white text-black shadow-[8px_8px_0_0_#000]">
-        <div className="flex items-baseline justify-between gap-4 border-b-4 border-black bg-black px-4 py-2 text-white">
-          <span className="font-mono text-xs uppercase tracking-[0.2em]">agent wants to act</span>
+      <div className="w-full max-w-xl overflow-hidden rounded-control border border-hair-strong bg-canvas text-ink shadow-[0_1px_2px_rgba(0,0,0,.06)]">
+        <div className="flex items-baseline justify-between gap-4 bg-canvas-night px-4 py-2 text-on-dark">
+          <span className="code text-[0.6875rem] uppercase tracking-[0.2em]">agent wants to act</span>
           {depth > 0 && (
-            <span className="font-mono text-xs">{depth} more waiting</span>
+            <span className="code text-[0.6875rem] text-on-dark/60">{depth} more waiting</span>
           )}
         </div>
 
         <div className="px-4 py-4">
-          <h2 className="text-2xl font-black leading-tight">{pending.title}</h2>
-          <p className="mt-1 text-lg">{pending.summary}</p>
+          <h2 className="plate text-[1.375rem]">{pending.title}</h2>
+          <p className="mt-1 text-[1rem]">{pending.summary}</p>
 
           {pending.details && pending.details.length > 0 && (
-            <dl className="mt-3 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 border-t-2 border-black pt-3 font-mono text-sm">
+            <dl className="code mt-3 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 border-t border-hair pt-3 text-[0.8125rem]">
               {pending.details.map((d) => (
                 <div key={d.label} className="contents">
-                  <dt className="uppercase tracking-wide text-neutral-600">{d.label}</dt>
+                  <dt className="uppercase tracking-wide text-ink-mute">{d.label}</dt>
                   <dd>{d.value}</dd>
                 </div>
               ))}
@@ -65,15 +65,13 @@ function Card({ pending, depth }: { pending: PendingConfirm; depth: number }) {
 
           {rejecting && (
             <label className="mt-4 block">
-              <span className="font-mono text-xs uppercase tracking-wide">
-                Why not? The agent is told this reason.
-              </span>
+              <span className="colhead">Why not? The agent is told this reason.</span>
               <input
                 autoFocus
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="that transfer is too long for me"
-                className="mt-1 w-full border-2 border-black px-2 py-2 text-base"
+                className="mt-1 w-full rounded-control border border-hair-strong px-2.5 py-2 text-[0.9375rem] focus:border-primary-deep"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") pending.reject(reason);
                 }}
@@ -82,18 +80,18 @@ function Card({ pending, depth }: { pending: PendingConfirm; depth: number }) {
           )}
         </div>
 
-        <div className="flex gap-2 border-t-4 border-black p-3">
+        <div className="flex gap-2 border-t border-hair p-3">
           <button
             type="button"
             onClick={() => pending.resolve()}
-            className="flex-1 bg-black px-4 py-3 text-lg font-bold uppercase tracking-wide text-white"
+            className="flex-1 rounded-control bg-primary px-4 py-3 text-[1rem] font-bold uppercase tracking-wide text-on-primary transition-colors duration-150 hover:bg-primary-deep active:scale-[0.99]"
           >
             {pending.confirmLabel ?? "Confirm"}
           </button>
           <button
             type="button"
             onClick={() => (rejecting ? pending.reject(reason) : setRejecting(true))}
-            className="flex-1 border-2 border-black px-4 py-3 text-lg font-bold uppercase tracking-wide"
+            className="flex-1 rounded-control border border-hair-strong px-4 py-3 text-[1rem] font-bold uppercase tracking-wide hover:border-ink"
           >
             {rejecting ? "Send rejection" : (pending.rejectLabel ?? "Reject")}
           </button>

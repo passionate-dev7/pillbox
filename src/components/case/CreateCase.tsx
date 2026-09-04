@@ -106,7 +106,7 @@ export function CreateCase() {
   }
 
   return (
-    <form onSubmit={submit} className="border border-hair-strong bg-paper p-4">
+    <form onSubmit={submit} className="border border-hair-strong bg-canvas p-4">
       <h2 className="colhead">Start a round</h2>
 
       <div className="mt-3 grid gap-3 sm:grid-cols-[2fr_1fr]">
@@ -119,7 +119,7 @@ export function CreateCase() {
             autoComplete="off"
             name="patientLabel"
             placeholder="Dad…"
-            className="mt-1 block w-full rounded-control border border-hair-strong bg-paper px-2.5 py-2 text-[0.9375rem] font-normal focus:border-accent"
+            className="mt-1 block w-full rounded-control border border-hair-strong bg-canvas px-2.5 py-2 text-[0.9375rem] font-normal focus:border-primary"
           />
         </label>
         <label className="block text-[0.8125rem] font-semibold">
@@ -134,14 +134,14 @@ export function CreateCase() {
             min={0}
             max={120}
             placeholder="78…"
-            className="num mt-1 block w-full rounded-control border border-hair-strong bg-paper px-2.5 py-2 text-[0.9375rem] font-normal focus:border-accent"
+            className="num mt-1 block w-full rounded-control border border-hair-strong bg-canvas px-2.5 py-2 text-[0.9375rem] font-normal focus:border-primary"
           />
         </label>
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-3">
         <h3 className="colhead">Medications</h3>
-        <span className="chip-simulated inline-flex items-center bg-paper-inset px-2 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-ink-soft">
+        <span className="chip-simulated inline-flex items-center bg-canvas-soft px-2 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-ink-mute">
           Simulated
         </span>
       </div>
@@ -151,10 +151,10 @@ export function CreateCase() {
 
       <div className="mt-3 flex flex-col gap-3">
         {rows.map((row) => (
-          <div key={row.key} className="border border-hair bg-paper-sunk p-3">
+          <div key={row.key} className="border border-hair bg-canvas-soft p-3">
             <div className="grid gap-2 sm:grid-cols-[1.3fr_0.8fr_1fr_1fr_auto]">
               <div className="relative">
-                <label className="block text-[0.6875rem] font-semibold text-ink-soft">
+                <label className="block text-[0.6875rem] font-semibold text-ink-mute">
                   Generic
                   <input
                     value={row.generic}
@@ -164,21 +164,21 @@ export function CreateCase() {
                     autoComplete="off"
                     name={`generic-${row.key}`}
                     placeholder="warfarin…"
-                    className="mt-1 block w-full rounded-control border border-hair-strong bg-paper px-2 py-1.5 text-[0.875rem] focus:border-accent"
+                    className="mt-1 block w-full rounded-control border border-hair-strong bg-canvas px-2 py-1.5 text-[0.875rem] focus:border-primary"
                   />
                 </label>
                 {suggestFor === row.key && suggestions.length > 0 ? (
-                  <ul className="absolute z-10 mt-0.5 w-full border border-hair-strong bg-paper text-[0.8125rem] shadow-none">
+                  <ul className="absolute z-10 mt-0.5 w-full border border-hair-strong bg-canvas text-[0.8125rem] shadow-none">
                     {suggestions.map((d) => (
                       <li key={d.generic}>
                         <button
                           type="button"
-                          className="block w-full px-2 py-1.5 text-left hover:bg-accent-soft"
+                          className="block w-full px-2 py-1.5 text-left hover:bg-primary-soft"
                           onMouseDown={() => updateRow(row.key, { generic: d.generic })}
                         >
                           {d.generic}
                           {d.brands.length ? (
-                            <span className="text-ink-subtle"> · {d.brands.join(", ")}</span>
+                            <span className="text-ink-faint"> · {d.brands.join(", ")}</span>
                           ) : null}
                         </button>
                       </li>
@@ -186,34 +186,34 @@ export function CreateCase() {
                   </ul>
                 ) : null}
               </div>
-              <label className="block text-[0.6875rem] font-semibold text-ink-soft">
+              <label className="block text-[0.6875rem] font-semibold text-ink-mute">
                 Dose
                 <input
                   value={row.dose}
                   onChange={(e) => updateRow(row.key, { dose: e.target.value })}
                   name={`dose-${row.key}`}
                   placeholder="5 mg…"
-                  className="mt-1 block w-full rounded-control border border-hair-strong bg-paper px-2 py-1.5 text-[0.875rem] focus:border-accent"
+                  className="mt-1 block w-full rounded-control border border-hair-strong bg-canvas px-2 py-1.5 text-[0.875rem] focus:border-primary"
                 />
               </label>
-              <label className="block text-[0.6875rem] font-semibold text-ink-soft">
+              <label className="block text-[0.6875rem] font-semibold text-ink-mute">
                 Schedule
                 <input
                   value={row.schedule}
                   onChange={(e) => updateRow(row.key, { schedule: e.target.value })}
                   name={`schedule-${row.key}`}
                   placeholder="Morning…"
-                  className="mt-1 block w-full rounded-control border border-hair-strong bg-paper px-2 py-1.5 text-[0.875rem] focus:border-accent"
+                  className="mt-1 block w-full rounded-control border border-hair-strong bg-canvas px-2 py-1.5 text-[0.875rem] focus:border-primary"
                 />
               </label>
-              <label className="block text-[0.6875rem] font-semibold text-ink-soft">
+              <label className="block text-[0.6875rem] font-semibold text-ink-mute">
                 Prescriber
                 <input
                   value={row.prescriber}
                   onChange={(e) => updateRow(row.key, { prescriber: e.target.value })}
                   name={`prescriber-${row.key}`}
                   placeholder="Dr. Alvarez…"
-                  className="mt-1 block w-full rounded-control border border-hair-strong bg-paper px-2 py-1.5 text-[0.875rem] focus:border-accent"
+                  className="mt-1 block w-full rounded-control border border-hair-strong bg-canvas px-2 py-1.5 text-[0.875rem] focus:border-primary"
                 />
               </label>
               <div className="flex items-end">
@@ -221,7 +221,7 @@ export function CreateCase() {
                   type="button"
                   onClick={() => removeRow(row.key)}
                   aria-label={`Remove medication row ${row.generic || "blank"}`}
-                  className="h-[34px] w-full rounded-control border border-hair-strong px-2 text-[0.75rem] text-ink-soft hover:border-tier-out hover:text-tier-out sm:w-auto"
+                  className="h-[34px] w-full rounded-control border border-hair-strong px-2 text-[0.75rem] text-ink-mute hover:border-tier-out hover:text-tier-out sm:w-auto"
                 >
                   Remove
                 </button>
