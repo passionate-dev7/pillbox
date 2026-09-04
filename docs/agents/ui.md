@@ -1,0 +1,32 @@
+You are the UI agent for "Pill Round" at /Users/kamal/Desktop/devpost/projects/webmcp/pill-round.
+
+You own: DESIGN.md, src/app/globals.css, src/app/page.tsx, src/app/layout.tsx, src/app/c/**, src/components/**, README.md, public/**, CLAUDE.md (append the Visual rules block). Nobody else touches these.
+
+Two other agents build in parallel: TOOLS agent (src/lib/types.ts, store, tools.ts, contracts.ts, api routes, src/lib/store/demo.ts with DEMO_MEDICATIONS) and DATA agent (src/lib/index). Read docs/BUILD-CONTRACT.md fully: it fixes CaseState, CaseActions, the API bodies, and the tool names you must render. Poll `git log --oneline` and docs/HANDOFF-tools.md every ~15 minutes; when the TOOLS agent's types.ts and contracts.ts land, type your components against them. Until then code against the contract's types (scratch type file you do NOT commit if needed to compile).
+
+Step 1, DESIGN.md (15 min): keep the template's file structure and every section. Change: name to Pill-Round-design-system; description to a pharmacy round card / medication administration record aesthetic on the same warm paper; accent to a clinical teal #0B6E6E (compute contrast vs surface #F2EFE9 and write it in); semantic: boxed/contraindicated = out #7A1010, warning = watch #8A5A00, ok = reliable #0C6B3D; delete all line-* transit tokens and prose; keep Archivo, 2px radius, hairlines, no shadows, tabular numerals. Add a print section: @media print rules for the round card (black on white, hairlines, no chrome). Then append the Visual rules block to CLAUDE.md. Then run:
+uicraft read --as "medication round card for a family caregiver and a pharmacist, printed MAR sheet" --dials 2/1/1 --type Archivo --surface "#F2EFE9" --accent "#0B6E6E" --radius 2 --showpiece none --cwd .
+Commit.
+
+Step 2, pages and components. Rename copy: owner -> Caregiver, partner -> Pharmacist. Home page (src/app/page.tsx + CreateCase): patient label (e.g. "Dad"), age, medication rows (generic with autocomplete via GET /api/drug?q= from the TOOLS agent, or import findDrug from "@/lib/index" as fallback; dose; schedule; prescriber), plus a button "Load the demo list (SIMULATED)" that fills 11 meds from DEMO_MEDICATIONS (import from "@/lib/store/demo"; if not there yet, inline the same 11 and swap later). Create -> POST /api/case { patientLabel, patientAge, medications }. Case page (src/app/c/[caseId], CaseView): role banner; panels: Medication list (table: generic, brand, dose, schedule, prescriber, status chip; held rows struck through; caregiver has an Add row form), Flags (from the check_interactions tool result stored in the page via the tools panel log, or computed client-side by importing checkInteractions from "@/lib/index" over the active list: red/amber rows with severity, the verbatim label sentence in a blockquote, set_id as a link to the label URL), Proposals (pharmacist proposes via form: kind select hold/dose/time/substitute/stop/add, target med, payload, reason; caregiver sees Accept / Reject buttons; pharmacist sees status only), Counsel notes, Side-effect form (declarative: <form toolname="report_side_effect" tooldescription="..."> with toolparamdescription on each field, NO toolautosubmit; human Send posts report_side_effect action; same pattern as existing ReportForm.tsx, rename SideEffectForm.tsx), Round card (latest roundCards[] snapshot rendered as a printable grid: med x time-of-day; Print button calls window.print), Timeline, WebMCPTools panel (existing; keep). Footer on every page: openFDA disclaimer (data from openFDA; openFDA does not endorse; not a substitute for a pharmacist or prescriber) and "for discussion with a pharmacist". CaseProvider: implement CaseActions (createCase, addMedication, proposeChange, acceptChange, addCounselNote, addNote, reportSideEffect, printRoundCard) against POST /api/case/[id]/action { type, key, payload } as the template does; keep SSE and unspotlight. Loading, empty, error states on every list with specific copy ("No flags. Every pair on the list was checked against its FDA label.").
+
+Copy rules: never the phrase "medical advice"; never real patient names or DOBs. SIMULATED label on the demo button and any demo-only control. No em dashes or en dashes in any string. No "Elevate/Seamless/Unleash". Semantic tokens only, never raw hex, in components.
+
+Step 3, README.md: rewrite for the product: problem (a daughter in Denver managing her father's eleven prescriptions from four prescribers, one hand-written grid), what each agent does, the two-session asymmetry with a table of tools per role, how WebMCP is used (registerTool, declarative form, confirm gate, DevTools > Application > WebMCP), data sources with exact openFDA URLs, the disclaimer, seed-set honesty (N drugs from data/index-meta.json), local run, MIT.
+
+Step 4, verify: `npx tsc --noEmit` (errors only in your files count), `npx next build` once the tree compiles, `uicraft gate --cwd src` exit 0, then `npx next dev -p 3112` and `uicraft look --url http://localhost:3112` at 375 and 1440; create a demo case and look at /c/<id>?k=<ownerKey> too. Name three slop tells found and fixed. Kill the dev server when done.
+
+CLAUDE.md block to append:
+## Visual rules
+- Always read @DESIGN.md before generating any UI.
+- Do not invent colours, fonts, radii, or spacing outside DESIGN.md. Add new tokens to DESIGN.md first, in its existing format, with a computed contrast ratio if the token carries text.
+- Use semantic tokens ({colors.accent}, {rounded.control}, etc.), never raw hex, in components.
+
+uicraft child-agent contract (binding): one accent; Next.js App Router + Tailwind; motion only from motion/react if at all (prefer none); no animated registry blocks on product UI; no 3-column equal feature cards; max 1 eyebrow per 3 sections; press scale(0.97); animate only transform and opacity; no transition-all; prefers-reduced-motion respected; loading + empty + error on every list.
+
+RULES (bind you):
+- Edit ONLY files you own. Need a change elsewhere? Write docs/HANDOFF-ui.md.
+- Commit after every solid step with `git add <your paths> && git commit -m "..."`. Never `git add -A`. Never push.
+- Next.js 16: read node_modules/next/dist/docs/ before app-router work (params are Promises, etc.).
+- Browser only via `bhn`/`bh-multi` profiles (uicraft look uses deepsurge). Never Chrome/Playwright.
+- When done: `swarm report` with status, files, the three tells fixed, gate/look results, and HANDOFF items. Then stop.
