@@ -32,17 +32,27 @@ Pillbox is my answer to "moderate."
 
 That rule cost me most of the data work. openFDA hands you combination products first, so the label for "Amlodipine and Atorvastatin" would have stood in for atorvastatin and given it no pharmacologic class at all. The index now aggregates brands, classes and section text across every prescription label for a generic instead of trusting the first hit. 64 drugs, 1,012 interaction sentences, 497 geriatric-use sentences, each tied to its set_id. The seed set is printed on the page; it is not the whole formulary.
 
+
+![Architecture](https://raw.githubusercontent.com/passionate-dev7/pillbox/main/video/diagrams/architecture.png)
+
+*openFDA labels become a sentence index keyed by every drug each sentence names; check_interactions returns the sentence, the set_id and a severity; the page registers tools per link and the server re-checks every write.*
+
 **Who gets to say yes.** The pharmacist's agent calls `propose_change`, hold warfarin until the INR is rechecked. It pauses in a confirmation card until the pharmacist clicks Confirm, then shows up in my window over a live stream, no reload, with Accept and Reject buttons the pharmacist never sees. My agent calls `accept_change`; I press Confirm; warfarin flips to held and the flags recompute against what is actually active. If the pharmacist's agent tries to accept its own proposal, the server answers 403: "Only the caregiver can accept change. You are the pharmacist: propose a change instead and the caregiver confirms it." The role comes from the capability key in the URL, re-derived on every write. Hiding a tool is not the boundary; the server is.
 
 **Two things only a person can do.** The side-effect report is a real `<form toolname="report_side_effect">` with `toolparamdescription` on each field and no `toolautosubmit`; the agent fills it, a human presses Send. `print_round_card` snapshots the list into a grid by time of day, which is the thing that actually replaces the photo on the fridge.
+
+
+![Two sessions, one page](https://raw.githubusercontent.com/passionate-dev7/pillbox/main/video/diagrams/two-sessions.png)
+
+*The caregiver's window and the pharmacist's window on the same list. The pharmacist can propose; only the caregiver can accept, and the server enforces it.*
 
 **Under the hood.** `document.modelContext.registerTool`, native first, `@mcp-b/webmcp-polyfill` behind it, a badge on the page saying which is live. Fourteen tools with strict schemas and `readOnlyHint`. `untrustedContentHint` is true on `lookup_label_section` and `check_geriatric_warnings` because label prose is third-party text; it is wrapped in `<untrusted-user-text>` on the tool, REST and SSE paths alike. Descriptions change with state: `accept_change` says how many proposals are pending. Confirm gates live inside each mutating tool's `execute`. Seventeen eval fixtures, the negative ones asserting the denied tool is absent from that session's `toolsForRole`; 132 tests. Versioned writes (409 after four losing retries) and a rate limit of 60 per minute per IP and per list (429 with Retry-After), which I burst-tested against the live deploy with 70 concurrent requests.
 
 **What I got wrong.** The first deploy passed `reportForm={false}` to the tools panel, so the side-effect form never registered. Five of the seven review passes I ran caught it. It is mounted now.
 
-The footer carries openFDA's disclaimer. This is label text for discussion with a pharmacist, not a diagnosis, and nothing on the page says otherwise. Everything here was written on 4 September 2026.
+The footer carries openFDA's disclaimer. This is label text for discussion with a pharmacist, not a diagnosis, and nothing on the page says otherwise.
 
-Built with Next.js 16, React 19, TypeScript, Tailwind CSS 4, WebMCP (`document.modelContext`), `@mcp-b/webmcp-polyfill`, Server-Sent Events, Vercel, Upstash Redis, Vitest, and openFDA (drug label, NDC directory, drug enforcement).
+Everything here was written on 4 September 2026 with Next.js 16, TypeScript, Tailwind 4, Upstash Redis, Vitest and openFDA. The build script, every openFDA query URL and the eval fixtures are in the repo.
 
 ---
 
