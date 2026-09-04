@@ -1,9 +1,0 @@
-1
-00:00:00,000 --> 00:00:04,493
-Now the companion's window, same trip. It
-has propose reroute, no accept reroute.
-
-2
-00:00:04,493 --> 00:00:06,046
-The rider's is the opposite.
-

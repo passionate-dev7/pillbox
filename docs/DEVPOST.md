@@ -18,6 +18,7 @@ A caregiver and a pharmacist each get an agent on one medication list, every fla
 
 - Live: https://pillbox-care.vercel.app
 - Repo: https://github.com/passionate-dev7/pillbox (MIT)
+- Video: https://www.youtube.com/watch?v=ZE0akgsu9tQ
 
 ---
 

@@ -1,3 +1,0 @@
-file '/Users/kamal/Desktop/devpost/projects/webmcp/video/assemble/segments/1b_seg0.mp4'
-file '/Users/kamal/Desktop/devpost/projects/webmcp/video/assemble/segments/1b_seg1.mp4'
-file '/Users/kamal/Desktop/devpost/projects/webmcp/video/assemble/segments/1b_seg2.mp4'

@@ -1,9 +1,0 @@
-1
-00:00:00,000 --> 00:00:04,393
-You can't do this with a chatbot wrapper,
-or by scraping the site... nothing knows
-
-2
-00:00:04,393 --> 00:00:05,465
-which tab is asking.
-

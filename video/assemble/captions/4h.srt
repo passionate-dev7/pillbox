@@ -1,9 +1,0 @@
-1
-00:00:00,000 --> 00:00:04,511
-Last, the rider opens the report broken
-equipment form. The agent fills it in, a
-
-2
-00:00:04,511 --> 00:00:05,695
-human presses Submit.
-
