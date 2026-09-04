@@ -17,7 +17,7 @@ A caregiver and a pharmacist each get an agent on one medication list, every fla
 ## Links
 
 - Live: https://pill-round-pink.vercel.app
-- Repo: https://github.com/kamalbuilds/pill-round (MIT)
+- Repo: https://github.com/passionate-dev7/pill-round (MIT)
 
 ---
 
@@ -81,9 +81,9 @@ that the denied tool is absent from that session's `toolsForRole`. 132 tests.
 
 ## What is new since 25 August 2026
 
-Everything. The repository was created on 4 September 2026 from a two-role WebMCP template
-(https://github.com/kamalbuilds/webmcp-two-agent-spine, also new this week); the domain, the
-openFDA index, the tools and the UI were written for this entry.
+Everything. The repository was created on 4 September 2026. The two-role WebMCP spine (capability
+keys, confirm gate, SSE), the domain, the openFDA index, the tools and the UI were all written for
+this entry.
 
 ## Built with
 
