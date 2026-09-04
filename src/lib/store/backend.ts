@@ -44,8 +44,8 @@ function redisRest(name: BackendName, url: string, token: string): StoreBackend 
     if (json.error) throw new Error(`store: ${name} error: ${json.error}`);
     return json.result as T;
   }
-  const key = (id: string, v: number) => `oos:case:${id}:v${pad(v)}`;
-  const head = (id: string) => `oos:case:${id}:head`;
+  const key = (id: string, v: number) => `pill:case:${id}:v${pad(v)}`;
+  const head = (id: string) => `pill:case:${id}:head`;
 
   return {
     name,
@@ -68,8 +68,8 @@ function redisRest(name: BackendName, url: string, token: string): StoreBackend 
       return true;
     },
     async listIds() {
-      const keys = (await cmd<string[]>(["KEYS", "oos:case:*:head"])) ?? [];
-      return keys.map((k) => k.slice("oos:case:".length, -":head".length));
+      const keys = (await cmd<string[]>(["KEYS", "pill:case:*:head"])) ?? [];
+      return keys.map((k) => k.slice("pill:case:".length, -":head".length));
     },
   };
 }

@@ -45,7 +45,7 @@ async function checkRedis(
 ): Promise<RateLimitVerdict> {
   const creds = redisRestCredentials();
   if (!creds) throw new Error("ratelimit: no redis credentials configured");
-  const rateKey = `oos:rl:${key}`;
+  const rateKey = `pill:rl:${key}`;
   const count = Number(await redisCmd(creds.url, creds.token, ["INCR", rateKey]));
   if (count === 1) {
     await redisCmd(creds.url, creds.token, ["EXPIRE", rateKey, windowSeconds]);
