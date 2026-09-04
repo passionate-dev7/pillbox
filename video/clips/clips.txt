@@ -1,0 +1,34 @@
+Pill Round demo screen clips manifest
+Recorded from the qa2 Brave profile (native WebMCP, CDP port 9347).
+
+Case: id 5cxnxyweam
+Caregiver: https://pill-round.vercel.app/c/5cxnxyweam?k=PZnx0IjV5o6r3kSaVJ5zks5j
+Pharmacist: https://pill-round.vercel.app/c/5cxnxyweam?k=k-hrCM3w_Y4H1iNvRjJoqlPl
+
+Clips (video/clips/*.mp4, 1920x1080 h264 mp4, recorded at 1600x1000 viewport):
+5.mp4  - caregiver window, check_interactions({add:"ciprofloxacin"}) called via
+         document.modelContext.executeTool, TOOL LOG shows the call and args.
+6.mp4  - caregiver window, FLAGS panel scrolled into view: amiodarone+warfarin and
+         omeprazole+warfarin rows, verbatim FDA sentences and set_id links.
+7.mp4  - pharmacist window, TOOLS REGISTERED panel: propose_change and
+         add_counsel_note present as writes, accept_change/add_medication absent.
+8.mp4  - pharmacist window, propose_change(kind:hold, medicationId warfarin,
+         reason) called; AGENT WANTS TO ACT confirm card shown, then Confirmed.
+9.mp4  - caregiver window (live stream, no reload): pending proposal visible,
+         accept_change(proposalId) called; confirm card shown ("Accept the
+         pharmacist's proposal?"); confirmed, warfarin flips to HELD.
+10.mp4 - caregiver window: report_side_effect declarative form filled (agent
+         sets textarea/input values), human clicks Send Report; success line
+         "Filed report: ..." confirmed.
+11.mp4 - caregiver window: print_round_card called; "Create a round card?"
+         confirm card, confirmed, round card grid shown with 10 active meds.
+13.mp4 - caregiver window: scroll from FLAGS panel down to the openFDA
+         disclaimer footer ("Medication data drawn from openFDA...").
+
+Not captured: DevTools > Application > WebMCP native panel recording (same
+blocker as documented in the sibling out-of-service project: screencapture
+cannot see through a locked screen, and an in-tab DevTools frontend cannot
+open its own debugger websocket by browser policy). Shot around it by showing
+the on-page "TOOLS REGISTERED IN THIS WINDOW" panel instead (beat 7), which
+lists the same tool names, read/write kind, and registered/gen count that the
+native DevTools panel would show.

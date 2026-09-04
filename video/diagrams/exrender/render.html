@@ -1,0 +1,46 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>BOOT</title>
+<style>html,body{margin:0;background:#ffffff;font-family:system-ui}
+#log{padding:12px;font-size:14px;white-space:pre-wrap}
+img{display:block;width:960px;border:1px solid #c7c7c7;margin:12px}</style>
+<script type="importmap">
+{"imports":{
+ "react":"https://esm.sh/react@19.0.0",
+ "react/jsx-runtime":"https://esm.sh/react@19.0.0/jsx-runtime",
+ "react-dom":"https://esm.sh/react-dom@19.0.0",
+ "react-dom/client":"https://esm.sh/react-dom@19.0.0/client"
+}}
+</script>
+</head><body>
+<div id="log">loading @excalidraw/excalidraw…</div>
+<div id="out"></div>
+<script type="module">
+const log = (m)=>{document.getElementById('log').textContent += "\n"+m; console.log(m);};
+const scene = new URLSearchParams(location.search).get('scene') || 'problem';
+try {
+  const mod = await import("https://esm.sh/@excalidraw/excalidraw@0.18.1?external=react,react-dom");
+  log("package loaded");
+  const res = await fetch(`./scenes/${scene}.excalidraw`);
+  const data = await res.json();
+  log(`scene ${scene}: ${data.elements.length} elements`);
+  const blob = await mod.exportToBlob({
+    elements: data.elements,
+    appState: { ...data.appState, exportBackground: true, viewBackgroundColor: "#ffffff",
+                exportWithDarkMode: false, exportScale: 1 },
+    files: {},
+    exportPadding: 0,
+    mimeType: "image/png",
+    getDimensions: () => ({ width: 1920, height: 1080, scale: 1 }),
+  });
+  log(`blob ${blob.size} bytes`);
+  const url = URL.createObjectURL(blob);
+  const img = new Image(); img.src = url; document.getElementById('out').appendChild(img);
+  const save = await fetch(`/save/${scene}.png`, { method:"POST", body: blob });
+  log(`saved: ${save.status}`);
+  document.title = "DONE " + scene + " " + blob.size;
+} catch (e) {
+  log("ERROR " + (e && e.stack || e));
+  document.title = "FAIL " + scene;
+}
+</script>
+</body></html>
