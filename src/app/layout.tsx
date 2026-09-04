@@ -19,6 +19,8 @@ const jbMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  icons: { icon: "/logo-512.png", apple: "/logo-512.png" },
+  openGraph: { images: ["/logo.png"] },
   title: {
     default: "Pillbox",
     template: "%s | Pillbox",
