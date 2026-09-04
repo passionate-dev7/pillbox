@@ -1,0 +1,14 @@
+1
+00:00:00,000 --> 00:00:05,559
+Now the pharmacist's window, same list.
+Nine tools. Propose change and add counsel
+
+2
+00:00:05,559 --> 00:00:10,712
+note are here. Accept change and add
+medication are not. The server enforces
+
+3
+00:00:10,712 --> 00:00:12,746
+the same split on every write.
+

@@ -1,0 +1,20 @@
+1
+00:00:00,000 --> 00:00:04,261
+New York has a hundred and sixty
+accessible stations out of four hundred
+
+2
+00:00:04,261 --> 00:00:09,173
+seventy-two, and almost all of them depend
+on an elevator. Advocates count at least
+
+3
+00:00:09,173 --> 00:00:14,144
+twenty-five elevator outages a day, median
+four hours. If yours is out, you find out
+
+4
+00:00:14,144 --> 00:00:18,820
+standing at the platform... and whoever's
+tracking your trip can only text you.
+

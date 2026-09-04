@@ -1,97 +1,24 @@
 #!/usr/bin/env python3
-"""Generate a hand-drawn-style pointer arrow PNG for diagram-beat overlays.
-
-Ink #0A0A0A stroke with a paper-colored (#F2EFE9) 2px outline behind it, at
-roughly 90px arrow length. Drawn supersampled 4x then downsampled with
-LANCZOS for a smooth anti-aliased hand-drawn look. Tip (the point that should
-land on the target element) is recorded as TIP_X, TIP_Y in sprite pixel
-space -- overlay placement subtracts this offset from the target coordinate.
-"""
-import math
+"""Big bold pointer arrow for diagram overlays. Straight thick shaft, large head,
+fill colour from argv[1] (hex), white outline. Tail upper-left, tip lower-right.
+Tip is at (216,216) on a 300x300 canvas (same 0.72 ratio the cue filter expects)."""
+import sys, math
 from PIL import Image, ImageDraw
-
-SS = 4  # supersample factor
-CANVAS = 150 * SS
-INK = (10, 10, 10, 255)
-PAPER = (242, 239, 233, 255)
-
-# Arrow runs from the tail (upper-left) to the tip (lower-right), with a
-# slight hand-drawn bow in the middle.
-TAIL = (28, 22)
-MID_CTRL = (58, 52)
-TIP = (108, 108)
-
-
-def bezier(p0, p1, p2, n=60):
-    pts = []
-    for i in range(n + 1):
-        t = i / n
-        x = (1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t ** 2 * p2[0]
-        y = (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t ** 2 * p2[1]
-        pts.append((x, y))
-    return pts
-
-
-def scaled(pts):
-    return [(x * SS, y * SS) for x, y in pts]
-
-
-def stroke_path(draw, pts, width, color):
-    w = max(1, int(round(width)))
-    draw.line(pts, fill=color, width=w, joint="curve")
-    r = w / 2
-    for p in (pts[0], pts[-1]):
-        draw.ellipse([p[0] - r, p[1] - r, p[0] + r, p[1] + r], fill=color)
-
-
-def arrowhead_points(tip, direction, size):
-    ang = math.atan2(direction[1], direction[0])
-    spread = math.radians(28)
-    left = (
-        tip[0] - size * math.cos(ang - spread),
-        tip[1] - size * math.sin(ang - spread),
-    )
-    right = (
-        tip[0] - size * math.cos(ang + spread),
-        tip[1] - size * math.sin(ang + spread),
-    )
-    back = (
-        tip[0] - size * 0.55 * math.cos(ang),
-        tip[1] - size * 0.55 * math.sin(ang),
-    )
-    return [tip, left, back, right, tip]
-
-
-def main():
-    img = Image.new("RGBA", (CANVAS, CANVAS), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
-
-    shaft = bezier(TAIL, MID_CTRL, TIP, n=60)
-    dx = TIP[0] - shaft[-3][0]
-    dy = TIP[1] - shaft[-3][1]
-
-    head = arrowhead_points(TIP, (dx, dy), size=26)
-
-    shaft_s = scaled(shaft)
-    head_s = scaled(head)
-
-    ink_w = 7 * SS
-    paper_w = ink_w + 4 * SS
-
-    # paper outline first (shaft + head), then ink on top
-    stroke_path(draw, shaft_s, paper_w, PAPER)
-    draw.line(head_s, fill=PAPER, width=paper_w, joint="curve")
-    draw.polygon(head_s, fill=PAPER)
-
-    stroke_path(draw, shaft_s, ink_w, INK)
-    draw.line(head_s, fill=INK, width=ink_w, joint="curve")
-    draw.polygon(head_s, fill=INK)
-
-    out = img.resize((150, 150), Image.LANCZOS)
-    out_path = "assemble/assets/pointer.png"
-    out.save(out_path)
-    print(f"wrote {out_path}  tip=({TIP[0]},{TIP[1]})  size=150x150")
-
-
-if __name__ == "__main__":
-    main()
+SS=4; C=300*SS
+FILL=tuple(int(sys.argv[1].lstrip('#')[i:i+2],16) for i in (0,2,4))+(255,)
+OUT=(255,255,255,255)
+TAIL=(40,40); TIP=(216,216)
+ang=math.atan2(TIP[1]-TAIL[1],TIP[0]-TAIL[0])
+def pt(p,d,a): return (p[0]+d*math.cos(a),p[1]+d*math.sin(a))
+head_len=88; head_half=52; shaft_half=17
+base=pt(TIP,-head_len,ang)
+left=pt(base,head_half,ang-math.pi/2); right=pt(base,head_half,ang+math.pi/2)
+sl=pt(base,shaft_half,ang-math.pi/2); sr=pt(base,shaft_half,ang+math.pi/2)
+tl=pt(TAIL,shaft_half,ang-math.pi/2); tr=pt(TAIL,shaft_half,ang+math.pi/2)
+poly=[TIP,left,sl,tl,tr,sr,right]
+img=Image.new("RGBA",(C,C),(0,0,0,0)); d=ImageDraw.Draw(img)
+S=lambda ps:[(x*SS,y*SS) for x,y in ps]
+d.polygon(S(poly),fill=OUT,outline=OUT,width=8*SS)
+d.line(S(poly+[TIP]),fill=OUT,width=8*SS,joint="curve")
+d.polygon(S(poly),fill=FILL)
+img.resize((300,300),Image.LANCZOS).save(sys.argv[2]); print("wrote",sys.argv[2])

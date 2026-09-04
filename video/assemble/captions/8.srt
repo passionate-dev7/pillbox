@@ -1,0 +1,10 @@
+1
+00:00:00,000 --> 00:00:03,992
+The pharmacist's agent proposes holding
+the warfarin until an INR check. A
+
+2
+00:00:03,992 --> 00:00:06,636
+confirmation card. The pharmacist clicks
+confirm.
+

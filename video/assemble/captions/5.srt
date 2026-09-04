@@ -1,0 +1,14 @@
+1
+00:00:00,000 --> 00:00:04,930
+Here is the caregiver's window. I tell the
+agent: he started ciprofloxacin yesterday.
+
+2
+00:00:04,930 --> 00:00:09,453
+It calls check interactions with add
+ciprofloxacin, before the drug is even on
+
+3
+00:00:09,453 --> 00:00:10,053
+the list.
+

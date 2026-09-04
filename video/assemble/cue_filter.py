@@ -33,15 +33,15 @@ longer duration than the base). Produces [vout].
 """
 import sys
 
-PTR_W, PTR_H = 115, 115
+PTR_W, PTR_H = 260, 260
 # tip position within the *scaled* pointer sprite (bottom-right, pointing
 # down-right into the target corner) -- see gen_pointer.py TIP=(108,108) on
 # a 150x150 canvas, scaled by PTR_W/150.
-TIP_X = round(108 * PTR_W / 150, 1)
-TIP_Y = round(108 * PTR_H / 150, 1)
+TIP_X = round(216 * PTR_W / 300, 1)
+TIP_Y = round(216 * PTR_H / 300, 1)
 
-BOX_COLOR = "0x0039A6"
-BOX_THICK = 3
+BOX_COLOR = "0x24b47e"
+BOX_THICK = 6
 SLIDE_S = 0.4
 # how far inside the box's top-left corner the arrow tip lands
 INSET_FRAC = 0.14

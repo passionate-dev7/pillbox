@@ -1,0 +1,9 @@
+1
+00:00:00,000 --> 00:00:04,211
+The rider's agent picks it up, calls
+accept reroute, hits Confirm, both windows
+
+2
+00:00:04,211 --> 00:00:04,811
+update.
+

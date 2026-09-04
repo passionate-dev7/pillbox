@@ -1,0 +1,10 @@
+1
+00:00:00,000 --> 00:00:04,380
+Two rows go red. Warfarin. Here's the
+sentence, verbatim, from the warfarin
+
+2
+00:00:04,380 --> 00:00:08,585
+label, and the set ID that takes you to
+it. Nothing here is paraphrased.
+

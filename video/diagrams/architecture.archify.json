@@ -1,0 +1,376 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Pill Round: one medication list, two agents",
+    "output": "architecture.html",
+    "quality_profile": "showcase",
+    "visual_preset": "blueprint",
+    "views": [
+      {
+        "id": "labels",
+        "label": "The label index",
+        "focus": [
+          "labels",
+          "ndc",
+          "recalls",
+          "index"
+        ],
+        "note": "openFDA labels are split into sentences and indexed by every drug each sentence names. Every flag carries its verbatim sentence and set_id."
+      },
+      {
+        "id": "two-sessions",
+        "label": "Two sessions, two tool sets",
+        "focus": [
+          "caregiver",
+          "pharmacist",
+          "page",
+          "gate"
+        ],
+        "note": "One page, two links. The caregiver's agent can accept; the pharmacist's can only propose. The server re-checks on every write."
+      },
+      {
+        "id": "human-gate",
+        "label": "A person confirms every write",
+        "focus": [
+          "caregiver",
+          "confirm",
+          "store",
+          "sse"
+        ],
+        "note": "accept_change pauses in a confirm card. The side-effect report is a declarative form only a human can send."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "labels",
+      "type": "external",
+      "label": "Drug labels",
+      "sublabel": "drug/label.json",
+      "pos": [
+        30,
+        110
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "ndc",
+      "type": "external",
+      "label": "NDC directory",
+      "sublabel": "drug/ndc.json",
+      "pos": [
+        30,
+        220
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "recalls",
+      "type": "external",
+      "label": "Enforcement",
+      "sublabel": "drug/enforcement.json",
+      "pos": [
+        30,
+        330
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "index",
+      "type": "database",
+      "label": "Sentence index",
+      "sublabel": "64 drugs, 1,012 sentences",
+      "pos": [
+        250,
+        220
+      ],
+      "size": [
+        150,
+        60
+      ],
+      "tag": "set_id per flag"
+    },
+    {
+      "id": "checks",
+      "type": "backend",
+      "label": "check_interactions",
+      "sublabel": "pairs -> flags",
+      "pos": [
+        470,
+        220
+      ],
+      "size": [
+        150,
+        56
+      ]
+    },
+    {
+      "id": "page",
+      "type": "frontend",
+      "label": "Round page",
+      "sublabel": "modelContext",
+      "pos": [
+        680,
+        220
+      ],
+      "size": [
+        150,
+        60
+      ],
+      "tag": "registerTool per role"
+    },
+    {
+      "id": "caregiver",
+      "type": "frontend",
+      "label": "Caregiver's agent",
+      "sublabel": "12 tools",
+      "pos": [
+        890,
+        90
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "pharmacist",
+      "type": "frontend",
+      "label": "Pharmacist's agent",
+      "sublabel": "9 tools",
+      "pos": [
+        890,
+        350
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "sse",
+      "type": "messagebus",
+      "label": "SSE stream",
+      "sublabel": "no reload",
+      "pos": [
+        890,
+        220
+      ],
+      "size": [
+        150,
+        56
+      ]
+    },
+    {
+      "id": "confirm",
+      "type": "security",
+      "label": "Confirm card",
+      "sublabel": "human presses Confirm",
+      "pos": [
+        1100,
+        90
+      ],
+      "size": [
+        150,
+        56
+      ]
+    },
+    {
+      "id": "store",
+      "type": "database",
+      "label": "Round store",
+      "sublabel": "Upstash, versioned",
+      "pos": [
+        1100,
+        220
+      ],
+      "size": [
+        150,
+        56
+      ]
+    },
+    {
+      "id": "gate",
+      "type": "security",
+      "label": "Role gate",
+      "sublabel": "key -> role, 403",
+      "pos": [
+        1100,
+        350
+      ],
+      "size": [
+        150,
+        56
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "openFDA, public domain",
+      "wraps": [
+        "labels",
+        "ndc",
+        "recalls"
+      ]
+    },
+    {
+      "kind": "security-group",
+      "label": "One origin, two links",
+      "wraps": [
+        "page",
+        "caregiver",
+        "pharmacist",
+        "sse"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "labels-index",
+      "from": "labels",
+      "to": "index",
+      "label": "sentence split",
+      "fromSide": "right",
+      "toSide": "top",
+      "via": [
+        [
+          325,
+          138
+        ]
+      ]
+    },
+    {
+      "id": "ndc-index",
+      "from": "ndc",
+      "to": "index"
+    },
+    {
+      "id": "recalls-index",
+      "from": "recalls",
+      "to": "index",
+      "fromSide": "right",
+      "toSide": "bottom",
+      "via": [
+        [
+          325,
+          358
+        ]
+      ]
+    },
+    {
+      "id": "index-checks",
+      "from": "index",
+      "to": "checks",
+      "variant": "emphasis",
+      "labelDy": -16
+    },
+    {
+      "id": "checks-page",
+      "from": "checks",
+      "to": "page",
+      "label": "flags",
+      "variant": "emphasis",
+      "labelDy": -16
+    },
+    {
+      "id": "page-caregiver",
+      "from": "page",
+      "to": "caregiver",
+      "label": "owner key",
+      "fromSide": "top",
+      "toSide": "left"
+    },
+    {
+      "id": "page-pharmacist",
+      "from": "page",
+      "to": "pharmacist",
+      "label": "partner key",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "id": "caregiver-confirm",
+      "from": "caregiver",
+      "to": "confirm",
+      "label": "accept",
+      "variant": "security",
+      "labelDy": -18
+    },
+    {
+      "id": "pharmacist-gate",
+      "from": "pharmacist",
+      "to": "gate",
+      "label": "propose",
+      "variant": "security"
+    },
+    {
+      "id": "confirm-store",
+      "from": "confirm",
+      "to": "store",
+      "label": "role ok",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 24
+    },
+    {
+      "id": "gate-store",
+      "from": "gate",
+      "to": "store",
+      "label": "role ok",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "labelDy": -24
+    },
+    {
+      "id": "store-sse",
+      "from": "store",
+      "to": "sse",
+      "label": "version",
+      "variant": "dashed"
+    },
+    {
+      "id": "sse-page",
+      "from": "sse",
+      "to": "page",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "The label",
+      "items": [
+        "Every flag quotes the FDA label sentence verbatim",
+        "set_id and openFDA URL beside each one"
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "Two tool sets",
+      "items": [
+        "Caregiver: add_medication, accept_change, report_side_effect",
+        "Pharmacist: propose_change, add_counsel_note",
+        "Forged calls from the wrong link: 403"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Human in the loop",
+      "items": [
+        "accept_change pauses in a confirm card",
+        "Side-effect form is declarative, no toolautosubmit"
+      ]
+    }
+  ]
+}

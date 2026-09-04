@@ -1,0 +1,14 @@
+1
+00:00:00,000 --> 00:00:04,501
+The settlement asks the MTA for advance
+notice and rerouting info. This is what
+
+2
+00:00:04,501 --> 00:00:09,288
+that looks like when the rider's own agent
+does it... and what we own after today is
+
+3
+00:00:09,288 --> 00:00:09,888
+the index.
+

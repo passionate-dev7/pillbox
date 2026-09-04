@@ -1,0 +1,15 @@
+1
+00:00:00,000 --> 00:00:04,818
+It lands in the caregiver's window over
+the live stream, with an Accept button the
+
+2
+00:00:04,818 --> 00:00:09,165
+pharmacist never sees. The caregiver's
+agent calls accept change. Confirm.
+
+3
+00:00:09,165 --> 00:00:13,454
+Warfarin is held, and the flags recompute
+against what's actually active.
+

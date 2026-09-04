@@ -16,7 +16,7 @@ A caregiver and a pharmacist each get an agent on one medication list, every fla
 
 ## Links
 
-- Live: https://pill-round.vercel.app
+- Live: https://pill-round-pink.vercel.app
 - Repo: https://github.com/kamalbuilds/pill-round (MIT)
 
 ---
@@ -96,7 +96,7 @@ Vitest, openFDA (drug label, NDC directory, drug enforcement).
 ## Testing instructions (submission field)
 
 No login, no API key, no setup. Chrome 149 or later with WebMCP turned on at
-`chrome://flags/#enable-webmcp-testing`. Open https://pill-round.vercel.app.
+`chrome://flags/#enable-webmcp-testing`. Open https://pill-round-pink.vercel.app.
 
 1. **Create the demo list.** Press "Load the demo list (SIMULATED)": Dad, 78, eleven medications
    from four prescribers. Create. You are the caregiver. The Flags panel already shows the

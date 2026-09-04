@@ -1,0 +1,285 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Pill Round: two sessions on one list",
+    "quality_profile": "showcase",
+    "visual_preset": "blueprint",
+    "output": "two-sessions.html"
+  },
+  "lanes": [
+    {
+      "id": "owner",
+      "label": "Caregiver window"
+    },
+    {
+      "id": "server",
+      "label": "Server (role from capability key)",
+      "variant": "exception"
+    },
+    {
+      "id": "partner",
+      "label": "Pharmacist window"
+    }
+  ],
+  "phases": [
+    {
+      "id": "open",
+      "label": "Open the link",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "act",
+      "label": "Agents act",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "emphasis"
+    },
+    {
+      "id": "sync",
+      "label": "Gate + sync",
+      "fromCol": 4,
+      "toCol": 5,
+      "variant": "dashed"
+    }
+  ],
+  "groups": [
+    {
+      "id": "g1",
+      "label": "Same page, different tools",
+      "lane": "server",
+      "fromCol": 1,
+      "toCol": 1,
+      "variant": "emphasis"
+    },
+    {
+      "id": "g2",
+      "label": "Human confirm inside execute",
+      "lane": "owner",
+      "fromCol": 3,
+      "toCol": 4,
+      "variant": "security"
+    }
+  ],
+  "mainPath": [
+    "olink",
+    "page",
+    "otools",
+    "owrite",
+    "confirm",
+    "gate",
+    "store",
+    "sse"
+  ],
+  "nodes": [
+    {
+      "id": "olink",
+      "lane": "owner",
+      "col": 0,
+      "type": "external",
+      "label": "Caregiver",
+      "sublabel": "?k=ownerKey",
+      "width": 132
+    },
+    {
+      "id": "otools",
+      "lane": "owner",
+      "col": 2,
+      "type": "frontend",
+      "label": "12 tools",
+      "sublabel": "add, accept, side-effect form",
+      "width": 150
+    },
+    {
+      "id": "owrite",
+      "lane": "owner",
+      "col": 3,
+      "type": "backend",
+      "label": "accept_change",
+      "sublabel": "agent calls it",
+      "width": 150
+    },
+    {
+      "id": "confirm",
+      "lane": "owner",
+      "col": 4,
+      "type": "security",
+      "label": "Confirm card",
+      "sublabel": "person clicks",
+      "tag": "blocks until click",
+      "width": 150
+    },
+    {
+      "id": "page",
+      "lane": "server",
+      "col": 1,
+      "type": "frontend",
+      "label": "registerTool",
+      "sublabel": "per role, one origin",
+      "width": 150
+    },
+    {
+      "id": "gate",
+      "lane": "server",
+      "col": 4,
+      "type": "security",
+      "label": "assertRole",
+      "sublabel": "403 on wrong role",
+      "width": 150
+    },
+    {
+      "id": "store",
+      "lane": "server",
+      "col": 5,
+      "type": "database",
+      "label": "Versioned write",
+      "sublabel": "409 on stale",
+      "width": 150
+    },
+    {
+      "id": "plink",
+      "lane": "partner",
+      "col": 0,
+      "type": "external",
+      "label": "Pharmacist",
+      "sublabel": "?k=partnerKey",
+      "width": 132
+    },
+    {
+      "id": "ptools",
+      "lane": "partner",
+      "col": 2,
+      "type": "frontend",
+      "label": "9 tools",
+      "sublabel": "propose_change, counsel note",
+      "width": 150
+    },
+    {
+      "id": "pwrite",
+      "lane": "partner",
+      "col": 3,
+      "type": "backend",
+      "label": "propose_change",
+      "sublabel": "then Confirm",
+      "width": 150
+    },
+    {
+      "id": "denied",
+      "lane": "partner",
+      "col": 4,
+      "type": "security",
+      "label": "accept_change",
+      "sublabel": "not registered, 403 if forged",
+      "width": 150
+    },
+    {
+      "id": "sse",
+      "lane": "partner",
+      "col": 5,
+      "type": "messagebus",
+      "label": "SSE version",
+      "sublabel": "both windows, no reload",
+      "width": 150
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "olink",
+      "to": "page",
+      "variant": "default"
+    },
+    {
+      "id": "e2",
+      "from": "plink",
+      "to": "page",
+      "variant": "default"
+    },
+    {
+      "id": "e3",
+      "from": "page",
+      "to": "otools",
+      "label": "owner set",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e4",
+      "from": "page",
+      "to": "ptools",
+      "label": "partner set",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e5",
+      "from": "otools",
+      "to": "owrite",
+      "variant": "default"
+    },
+    {
+      "id": "e6",
+      "from": "owrite",
+      "to": "confirm",
+      "variant": "security"
+    },
+    {
+      "id": "e7",
+      "from": "confirm",
+      "to": "gate",
+      "label": "action + key",
+      "variant": "security"
+    },
+    {
+      "id": "e8",
+      "from": "ptools",
+      "to": "pwrite",
+      "variant": "default"
+    },
+    {
+      "id": "e9",
+      "from": "pwrite",
+      "to": "gate",
+      "label": "action + key",
+      "variant": "security"
+    },
+    {
+      "id": "e10",
+      "from": "pwrite",
+      "to": "denied",
+      "label": "tries to",
+      "variant": "dashed",
+      "role": "error"
+    },
+    {
+      "id": "e11",
+      "from": "gate",
+      "to": "store",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e12",
+      "from": "store",
+      "to": "sse",
+      "variant": "dashed",
+      "role": "return"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Asymmetry",
+      "items": [
+        "Caregiver accepts; pharmacist proposes",
+        "Neither list is the security boundary: the server is"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Human in the loop",
+      "items": [
+        "Every write waits for a click",
+        "Side-effect form: agent fills, human sends"
+      ]
+    }
+  ]
+}

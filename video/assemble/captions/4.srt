@@ -1,0 +1,19 @@
+1
+00:00:00,000 --> 00:00:04,529
+Every flag it raises carries the exact
+sentence from the FDA label that caused
+
+2
+00:00:04,529 --> 00:00:08,999
+it, with the label's set ID. The data is
+openFDA: sixty-four common geriatric
+
+3
+00:00:08,999 --> 00:00:13,470
+drugs, about a thousand interaction
+sentences, pulled live with the query URL
+
+4
+00:00:13,470 --> 00:00:14,921
+kept beside every number.
+
