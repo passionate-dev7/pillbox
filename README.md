@@ -5,6 +5,12 @@ hand-written grid on the fridge. She is not a pharmacist. Neither is he. Every r
 specialist, every "the cardiologist added something" is another line on that grid, with no one
 checking whether the new pill fights the old ones.
 
+Before: she opens eleven label PDFs, or an interaction checker that says "moderate" without saying
+why, then phones the pharmacy and waits. After: one `check_interactions` call with
+`add: "ciprofloxacin"` returns every flagged pair with the verbatim label sentence and its
+`set_id`, before the drug is on the list, and the pharmacist's proposal and her acceptance happen
+on the same page with the label text in front of both of them. Estimate, not measured.
+
 Pill Round is a shared medication round card for exactly that situation: one patient, a
 caregiver, and a pharmacist, each opening the same round from a different link, each getting a
 different set of WebMCP tools on the same page. The caregiver's agent can add medications and
@@ -83,6 +89,15 @@ are never unsourced claims.
 interaction sentence count, and build timestamp for this build are in `data/index-meta.json`
 (exported as `INDEX_META` from `src/lib/index`), read live, not hardcoded here. Two medications
 outside the seed set will not surface a flag even if one exists in reality.
+
+## Limits enforced by the server
+
+Every action route re-derives the role from the capability key (wrong key or wrong role: 403).
+Free text has ceilings (400 with the actual and allowed length). Writes use optimistic
+concurrency (409 after four losing retries). Rate limit: 60 actions per minute per IP and 60 per
+minute per case (`src/app/api/case/[id]/action/route.ts`), 429 with `Retry-After`. Reads over
+`GET /api/case/:id` and the SSE stream never carry either key and wrap free text in
+`<untrusted-user-text>`.
 
 ## Disclaimer
 
