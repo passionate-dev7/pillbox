@@ -1,39 +1,12 @@
-# Win conditions
+# WIN-CONDITIONS: Pill Round (WebMCP Challenge, third account)
 
-This repo is not itself a hackathon submission. It is the extracted, domain-stripped spine of
-`out-of-service` (WebMCP Challenge entry, scored 16.9/20 with the judge panel), published as a
-public template so two *other* Devpost entries under different accounts (`docs/NEXT-ENTRIES.md`
-in the `webmcp` project: Order to Correct, Pill Round) can clone it tonight and start from a
-working two-role WebMCP app instead of an empty Next.js project.
-
-- **Scoreboard**: not competing on its own scoreboard. It exists to raise the floor of the two
-  entries that do: both were scoped assuming this fork exists (`docs/NEXT-ENTRIES.md`, "Fork
-  recipe (30 min)").
-- **Bar to beat**: `out-of-service` itself, 16.9/20. The fork must not regress any of the
-  properties that scored it: role-derived capability keys (never a self-declared label),
-  confirm-before-mutate on every write tool, a declarative form with no `toolautosubmit`,
-  server-side role re-checks independent of which tools a session was handed, SSE-shared state,
-  spotlighted free text.
-- **Asset we will own**: the spine itself — `kamalbuilds/webmcp-two-agent-spine`, a public
-  GitHub template repo. The asset is the working code plus the "how to add a domain" README
-  section, not a hosted deployment.
-- **Off-platform buyer**: none; this is infrastructure for two sibling submissions, not a
-  product with its own user.
-- **Single entry**: N/A here. The eligibility risk this repo exists to remove is stated in
-  `docs/NEXT-ENTRIES.md`: one Devpost account per submission, so Order to Correct and Pill Round
-  ship from two different accounts, each forking this repo independently rather than sharing one
-  submission.
-- **Verb the brief names**: "clone it and have a working two-role WebMCP app in minutes."
-- **Our product performs that verb**: `pnpm install && pnpm dev` boots a case page where an
-  owner and a partner, in two browser tabs, each get an asymmetric WebMCP tool set, propose and
-  confirm a change, and see it land over SSE, with zero domain code written yet.
-- **Metric plan**: `npx tsc --noEmit`, `npx vitest run` (evals + store + webmcp lifecycle
-  suites), and `pnpm build` all pass clean before this is pushed; that is the fork-readiness bar.
-- **Live by**: tonight (2026-09-03 close window per `docs/NEXT-ENTRIES.md`), so the two forking
-  entries have time left to build their own domain on top of it.
-- **Deviation from research**: `docs/NEXT-ENTRIES.md`'s fork recipe says "delete data/ and
-  src/lib/index, src/lib/route, src/lib/live, keep src/lib/store... DESIGN.md, globals.css" — this
-  repo does exactly that, plus generalises the domain nouns (trip/rider/companion to
-  case/owner/partner) and the tool set (route/elevator tools to a generic
-  item/propose/accept/note/report set) so a fork does not have to un-rename transit vocabulary
-  before writing its own.
+Scoreboard: 94 entrant repos + 10 showcase apps indexed in ../../../research/scoreboard.md; personal health record lane (gap #2) has zero entries with record depth; nearest: webmcp-pharmacy (no personal-record depth), arthaguard (finance propose/approve). No overlap with Out of Service or Order to Correct.
+Bar to beat: 15 load-bearing tools with visible UI side effects, live URL, tool call on camera in the first 12 s, OSS licence; our first entry's judge-persona composite 16.9/20.
+Asset we will own: sentence-indexed drug interaction and geriatric-warning corpus from openFDA labels https://api.fda.gov/drug/label.json (verified 200 on 2026-09-03, public domain), NDC directory https://api.fda.gov/drug/ndc.json, recalls https://api.fda.gov/drug/enforcement.json; seed set of 60 common geriatric drugs pulled live at build time, each flag carrying set_id and the verbatim label sentence; query string beside every number. Committed as JSON.
+Off-platform buyer: an adult daughter in Denver who is the sole medication manager for her 78-year-old father in Tucson (eleven prescriptions, four prescribers), and the pharmacist at his pharmacy.
+Single entry: Pill Round
+Verb the brief names: "humans and agents can interact, collaborate, and create together"; "what people and agents can now do together that was difficult or impossible before"
+Our product performs that verb: yes. Caregiver session registers add_medication, accept_change, report_side_effect (declarative, no toolautosubmit), share_with_pharmacist; pharmacist session registers propose_change, add_counsel_note, never accept_change or add_medication. Code path: capability key per link -> server derives role -> registerTool set per role -> confirm-before-mutate inside accept_change execute -> shared list state over SSE. Verifiable in DevTools > Application > WebMCP in both windows.
+Metric plan: >= 60 drugs indexed with >= 200 interaction sentences by build hour 2; ciprofloxacin + warfarin flag returns the verbatim label sentence with set_id; >= 10 eval fixtures green; role denial test red then green. Checked in the repo test output and on the live URL. Page carries openFDA's disclaimer and "for discussion with a pharmacist".
+Live by: 2026-09-04 06:00 UTC, 2 h before the 08:00 UTC close.
+Deviation from research: single-party in ideas_B, rescoped to caregiver + pharmacist per critic.md ruling 2. Same multiple-account caution as Order to Correct.
