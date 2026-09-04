@@ -22,49 +22,27 @@ A caregiver and a pharmacist each get an agent on one medication list, every fla
 
 ---
 
-## Why this use case is a strong fit for WebMCP
+Every Sunday I photograph the grid on my dad's fridge and text it to myself. Eleven prescriptions, four doctors, his handwriting. He is 78 and I live in another city. When a fifth doctor added ciprofloxacin last week, nobody checked it against the warfarin. The interaction checker I found online said "moderate." That was the entire explanation.
 
-My dad is 78. He takes eleven prescriptions written by four different doctors, and I manage all of it from another city with a grid on the fridge that I photograph every Sunday. Last week a fifth doctor started him on ciprofloxacin. Nobody checked it against the warfarin, and the interaction checker I finally found said "moderate" and nothing else.
+Pillbox is my answer to "moderate."
 
-Pillbox is one medication list that a caregiver and a pharmacist open from two different links. Same page, same origin, different WebMCP tools. My link registers 12 tools and the pharmacist's registers 9. `add_medication`, `accept_change`, `print_round_card` and the side-effect form are only in mine. `propose_change` and `add_counsel_note` are only in theirs. You can see the two lists in DevTools > Application > WebMCP, one per window.
+**One list, two links.** I open the medication list with my link and get 12 WebMCP tools. His pharmacist opens the same list with a different link and gets 9. Same page, same origin. `add_medication`, `accept_change`, `print_round_card` and the side-effect form only exist in my window. `propose_change` and `add_counsel_note` only exist in the pharmacist's. If you open DevTools, Application, WebMCP in each window the lists disagree, and that disagreement is the product.
 
-The role comes from a capability key in the URL, and the server re-derives it on every write. If the pharmacist's agent tries to accept its own proposal, the response is a 403 that reads "Only the caregiver can accept change. You are the pharmacist: propose a change instead and the caregiver confirms it." A hidden tool is never the security boundary here; the server is.
+**The label, verbatim.** I tell my agent "he started ciprofloxacin yesterday." It calls `check_interactions` with `add: "ciprofloxacin"`, so the new drug is checked against the list before it is added. Two rows go red. Each flag shows the exact sentence from the FDA label that triggered it, the label's `set_id`, the openFDA URL, and a severity taken from which section the sentence lives in (boxed warning, contraindication, warning, interaction). Nothing is rephrased. Click the set_id and read the label yourself.
 
-## How it creates a better user experience
+That rule cost me most of the data work. openFDA hands you combination products first, so the label for "Amlodipine and Atorvastatin" would have stood in for atorvastatin and given it no pharmacologic class at all. The index now aggregates brands, classes and section text across every prescription label for a generic instead of trusting the first hit. 64 drugs, 1,012 interaction sentences, 497 geriatric-use sentences, each tied to its set_id. The seed set is printed on the page; it is not the whole formulary.
 
-I say "he started ciprofloxacin yesterday." The agent calls `check_interactions` with `add: "ciprofloxacin"`, so the new drug is tested against the whole list before it is even added. Two rows go red. Each flag carries the exact sentence from the FDA label that caused it, the label's `set_id`, the openFDA URL, and a severity derived from which section the sentence came from (boxed warning, contraindication, warning, interaction). Nothing is paraphrased. You can click the set_id and read the label yourself.
+**Who gets to say yes.** The pharmacist's agent calls `propose_change`, hold warfarin until the INR is rechecked. It pauses in a confirmation card until the pharmacist clicks Confirm, then shows up in my window over a live stream, no reload, with Accept and Reject buttons the pharmacist never sees. My agent calls `accept_change`; I press Confirm; warfarin flips to held and the flags recompute against what is actually active. If the pharmacist's agent tries to accept its own proposal, the server answers 403: "Only the caregiver can accept change. You are the pharmacist: propose a change instead and the caregiver confirms it." The role comes from the capability key in the URL, re-derived on every write. Hiding a tool is not the boundary; the server is.
 
-That "nothing is paraphrased" rule cost me most of the data work. openFDA returns combination products first (the label for "Amlodipine and Atorvastatin" is not the label for atorvastatin), so the index aggregates brand names, pharmacologic classes and section text across every prescription label for a generic instead of trusting the first hit. 64 drugs, 1,012 interaction sentences, 497 geriatric-use sentences, all tied to the set_id they came from. The seed set is stated on the page. It is not the whole formulary and I do not pretend it is.
+**Two things only a person can do.** The side-effect report is a real `<form toolname="report_side_effect">` with `toolparamdescription` on each field and no `toolautosubmit`; the agent fills it, a human presses Send. `print_round_card` snapshots the list into a grid by time of day, which is the thing that actually replaces the photo on the fridge.
 
-`check_duplicate_therapy` catches two drugs in the same class. `check_geriatric_warnings` returns the label's own geriatric-use text. `check_recalls` returns ongoing enforcement actions by generic.
+**Under the hood.** `document.modelContext.registerTool`, native first, `@mcp-b/webmcp-polyfill` behind it, a badge on the page saying which is live. Fourteen tools with strict schemas and `readOnlyHint`. `untrustedContentHint` is true on `lookup_label_section` and `check_geriatric_warnings` because label prose is third-party text; it is wrapped in `<untrusted-user-text>` on the tool, REST and SSE paths alike. Descriptions change with state: `accept_change` says how many proposals are pending. Confirm gates live inside each mutating tool's `execute`. Seventeen eval fixtures, the negative ones asserting the denied tool is absent from that session's `toolsForRole`; 132 tests. Versioned writes (409 after four losing retries) and a rate limit of 60 per minute per IP and per list (429 with Retry-After), which I burst-tested against the live deploy with 70 concurrent requests.
 
-## What people and agents can now do together that was difficult before
+**What I got wrong.** The first deploy passed `reportForm={false}` to the tools panel, so the side-effect form never registered. Five of the seven review passes I ran caught it. It is mounted now.
 
-The pharmacist's agent calls `propose_change` ("hold warfarin until INR is rechecked"). It pauses in a confirmation card until the pharmacist presses Confirm. Then it shows up in my window over a live stream, no reload, with Accept and Reject buttons the pharmacist never sees. My agent calls `accept_change`; I press Confirm; warfarin flips to held and the flags recompute against what is actually active. If I reject, my reason goes back to the pharmacist's agent as a sentence, not a status code.
+The footer carries openFDA's disclaimer. This is label text for discussion with a pharmacist, not a diagnosis, and nothing on the page says otherwise. Everything here was written on 4 September 2026.
 
-The side-effect report is a declarative form (`<form toolname="report_side_effect">`, `toolparamdescription` on each field, no `toolautosubmit`). The agent fills it; only a person can send it. `print_round_card` snapshots the list into a printable grid by time of day, which is the thing that actually goes on the fridge.
-
-The page carries openFDA's disclaimer in the footer. This is label text for discussion with a pharmacist, not a diagnosis, and the copy never says otherwise.
-
-## How WebMCP was implemented
-
-`document.modelContext.registerTool` only. The runtime reads the native object once, falls back to `@mcp-b/webmcp-polyfill`, and a badge on the page prints which one is live.
-
-Fourteen tools with strict `inputSchema` and `readOnlyHint`. `untrustedContentHint` is true on `lookup_label_section` and `check_geriatric_warnings` because label prose is third-party text; it is wrapped in `<untrusted-user-text>` before the model sees it, on the tool path and on the REST and SSE paths alike. Descriptions change with state: `accept_change` says how many proposals are pending, `list_medications` how many are active and how many held.
-
-Every mutating tool builds its own confirm gate inside `execute`. Seventeen eval fixtures assert the expected call per user message; the negative ones assert the denied tool is absent from that session's `toolsForRole`. 132 tests. Writes are versioned (409 after four losing retries) and rate limited (60 per minute per IP and per case, 429 with Retry-After); I burst-tested that against the live deploy with 70 concurrent requests and got the mix of 200, 409 and 429 I expected.
-
-One thing I got wrong and fixed: the first deploy mounted `<WebMCPTools reportForm={false}>`, so the side-effect form never registered. Five of seven reviewers I ran caught it. It is mounted now and the tool shows in the caregiver's list.
-
----
-
-## What is new since 25 August 2026
-
-All of it. The repository was created on 4 September 2026 and every line, including the openFDA index, the two-role spine, the tools and the UI, was written for this entry.
-
-## Built with
-
-Next.js 16, React 19, TypeScript, Tailwind CSS 4, WebMCP (`document.modelContext`), `@mcp-b/webmcp-polyfill`, `@mcp-b/webmcp-types`, Server-Sent Events, Vercel, Upstash Redis, Vitest, openFDA (drug label, NDC directory, drug enforcement).
+Built with Next.js 16, React 19, TypeScript, Tailwind CSS 4, WebMCP (`document.modelContext`), `@mcp-b/webmcp-polyfill`, Server-Sent Events, Vercel, Upstash Redis, Vitest, and openFDA (drug label, NDC directory, drug enforcement).
 
 ---
 
