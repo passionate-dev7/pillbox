@@ -71,3 +71,30 @@ over being accurate, which is the opposite of what earned my score here.
 ## 5. Total
 
 4 + 4 + 3 + 3 = **14/20**
+
+## Re-score after fixes (2026-09-04 05:25 UTC)
+
+Re-verified live against a freshly seeded case (`96w5fcksei`, 11 real DEMO_MEDICATIONS rows via
+POST /api/case). README.md now reads: "Before: she opens eleven label PDFs, or an interaction
+checker that says 'moderate' without saying why, then phones the pharmacy and waits. After: one
+`check_interactions` call with `add: 'ciprofloxacin'` returns every flagged pair with the verbatim
+label sentence and its `set_id` ... Estimate, not measured." That is exactly the labeled-estimate
+bar I asked for in my "move my score up one point" note, it's honest about being an estimate
+rather than dressing it up as a measurement, and it sits right next to the same seed-set-honesty
+section I already trusted.
+
+**WebMCP Leverage: 4/5.** Unchanged; provenance discipline (source fields, real setId/labelUrl)
+was already solid and this fix doesn't touch it.
+
+**Execution: 4/5.** Unchanged; the check_interactions call still works end to end on the fresh
+case (9 flags including ciprofloxacin+warfarin on the 11-drug demo list, re-verified this pass).
+
+**Potential Impact: 4/5.** Up from 3. The README now states the before/after directly rather than
+leaving me to infer it, and labels it an estimate instead of a measured number, which is the
+specific honesty move I asked for; still not a 5 because it remains a stated estimate, not real
+caregiver usage data, but that gap is now explicit rather than silent.
+
+**Creativity & Ambition: 3/5.** Unchanged; the core interaction-checker concept still isn't novel,
+the WebMCP per-role tool contract is still the creative part and it's still not primarily my lens.
+
+**New total: 4 + 4 + 4 + 3 = 15/20.**

@@ -77,3 +77,33 @@ toolparamdescription attributes) are already built; the honest fix is one line, 
 ## 5. Total
 
 4 + 3 + 4 + 3 = **14/20**
+
+## Re-score after fixes (2026-09-04 05:25 UTC)
+
+Re-checked the exact thing that failed my skeptical read last pass, on a fresh case
+(`ajkcu276wz`, seeded live with the 11 real DEMO_MEDICATIONS rows). `document.modelContext.getTools()`
+on the owner tab now returns 12 tools including `report_side_effect` (up from the 11 that were
+missing it), and `document.querySelectorAll('form[toolname]')` now finds it:
+`{"toolname":"report_side_effect","toolautosubmit":null,"tooldescription":"Report a possible side
+effect for a medication on this round: which medication, what happened, when it started, how
+severe. The caregiver reads the filled form and presses Send; it is never submitted
+automatically."}`. `toolautosubmit` is genuinely absent (null), not falsely present, matching what
+the component's source comments already claimed. The docs now match the running app on my first
+check, which is the specific bar I hold submissions to.
+
+**WebMCP Leverage: 5/5.** Up from 4. The tool set now matches what the named user's agent actually
+needs and what the docs claim, with nothing docked for a missing tool.
+
+**Execution: 4/5.** Up from 3. The single mismatch between docs and the live `getTools()` output
+that I flagged is gone; confirm cards, role gating, and live interaction data all still hold up
+under direct verification as before. Not a 5 because I have not re-run the full cross-role
+propose/accept loop or the denied-path sweep against this exact fresh case myself this pass, only
+the specific gap I named.
+
+**Potential Impact: 4/5.** Unchanged; the problem statement and realistic demo data were already
+credible and specific, this fix doesn't change that assessment.
+
+**Creativity & Ambition: 3/5.** Unchanged; the capability-key model is still solid and sensible
+rather than novel.
+
+**New total: 5 + 4 + 4 + 3 = 16/20.**

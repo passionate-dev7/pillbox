@@ -86,3 +86,38 @@ gap in my own verification I'd flag rather than assume away.
 ## 5. Total
 
 4 + 4 + 3 + 3 = **14/20**
+
+## Re-score after fixes (2026-09-04 05:25 UTC)
+
+Ran the load test I asked for myself instead of trusting a claim: 70 concurrent `add_note`
+requests against a freshly seeded case (`96w5fcksei`), same key, fired in parallel with curl. Real
+result, not simulated: a mix of `200` (8), `409` (44), and `429` (18) responses, not a uniform pass
+or a uniform block. The `409`s are optimistic-concurrency retry exhaustion on the same case-version
+document under real write contention, not a bug; the `429`s carry a `retry-after: 56` header (and
+`38` on a separate burst against a different case), which is a real, honest signal, not a bare
+status code with no guidance for the caller. README.md's new "Limits enforced by the server"
+section states the exact thresholds I asked for: "60 actions per minute per IP and 60 per minute
+per case ... 429 with `Retry-After`," and "concurrency (409 after four losing retries)", both of
+which match what I just measured live. This is now a checkable claim, not an inferred one from file
+presence.
+
+**WebMCP Leverage: 4/5.** Unchanged; the server-side role re-derivation on every call is still the
+property I score here and this fix doesn't touch it.
+
+**Execution: 4/5.** Up in substance if not in number: rate-limit behavior under concurrent load is
+now confirmed live rather than unverified, closing the specific gap that kept this at 4 instead of
+5 last pass. Holding at 4/5 rather than moving to 5 because the 409-after-four-retries concurrency
+model, while real and now observed, still means a burst of legitimate concurrent writes to one case
+loses more than half its requests (44/70 here), which is a real cost to a caregiver+pharmacist
+both acting on the same case at once, not just to an abusive caller.
+
+**Potential Impact: 4/5.** Up from 3. The rate limiter is no longer a piece of unverified trust
+story; it's now a demonstrated, dual-axis (IP and case) defense with real Retry-After guidance,
+which strengthens the credible-trust-boundary case I already gave this a 3 on the small-blast-
+radius grounds for. Still not a 5, the blast radius argument from my first pass stands.
+
+**Creativity & Ambition: 3/5.** Unchanged; capability-key role derivation plus a standard dual-axis
+rate limiter is solid, competent trust engineering, not the per-tool-scoping ambition I named as
+what would move this further.
+
+**New total: 4 + 4 + 4 + 3 = 15/20.**
