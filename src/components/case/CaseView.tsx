@@ -221,7 +221,7 @@ export function CaseView() {
                         data-testid={`med-${m.id}`}
                       >
                         <td className="px-3 py-2 text-[0.875rem]">{m.generic}</td>
-                        <td className="px-2 py-2 text-[0.8125rem] text-ink-soft">{m.brand ?? "—"}</td>
+                        <td className="px-2 py-2 text-[0.8125rem] text-ink-soft">{m.brand ?? "n/a"}</td>
                         <td className="num px-2 py-2 text-[0.875rem]">{m.dose}</td>
                         <td className="px-2 py-2 text-[0.8125rem]">{m.schedule}</td>
                         <td className="px-2 py-2 text-[0.8125rem] text-ink-soft">{m.prescriber}</td>
