@@ -2,7 +2,7 @@
   "schema_version": 2,
   "diagram_type": "workflow",
   "meta": {
-    "title": "Pill Round: two sessions on one list",
+    "title": "Pillbox: two sessions on one list",
     "quality_profile": "showcase",
     "visual_preset": "blueprint",
     "output": "two-sessions.html"

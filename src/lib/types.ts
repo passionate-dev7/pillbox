@@ -1,5 +1,5 @@
 /**
- * Domain model for Pill Round: a caregiver (owner) and a pharmacist (partner) share one
+ * Domain model for Pillbox: a caregiver (owner) and a pharmacist (partner) share one
  * medication list for one patient. Everything in src/lib/webmcp and src/lib/store/backend.ts
  * outside this file and src/lib/store/actions.ts stays domain-agnostic.
  */

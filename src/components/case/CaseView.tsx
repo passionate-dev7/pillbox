@@ -126,7 +126,7 @@ export function CaseView() {
         <div className="mx-auto flex w-full max-w-[1360px] flex-wrap items-center justify-between gap-x-8 gap-y-2 px-4 py-4 sm:px-8">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <Link href="/" className="text-[0.9375rem] font-bold text-on-dark/70 hover:text-primary">
-              Pill Round
+              Pillbox
             </Link>
             <span className="text-on-dark/30" aria-hidden>
               /

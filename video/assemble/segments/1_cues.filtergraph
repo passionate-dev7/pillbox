@@ -1,0 +1,3 @@
+[0:v]drawbox=x=110:y=340:w=410:h=140:color=0x24b47e:t=6:enable='between(t,0.386,6.75)'[vb];
+[1:v]scale=260:260[ptr];
+[vb][ptr]overlay=x='-19.8':y='172.4':enable='between(t,0.386,6.75)'[vout]

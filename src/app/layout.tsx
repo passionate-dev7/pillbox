@@ -20,8 +20,8 @@ const jbMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Pill Round",
-    template: "%s | Pill Round",
+    default: "Pillbox",
+    template: "%s | Pillbox",
   },
   description:
     "A shared medication round card for a family caregiver and a pharmacist: capability-key roles, confirm-before-mutate, interaction flags from openFDA labels, a printable MAR sheet.",

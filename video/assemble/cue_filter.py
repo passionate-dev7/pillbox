@@ -33,7 +33,7 @@ longer duration than the base). Produces [vout].
 """
 import sys
 
-PTR_W, PTR_H = 260, 260
+PTR_W, PTR_H = 150, 150
 # tip position within the *scaled* pointer sprite (bottom-right, pointing
 # down-right into the target corner) -- see gen_pointer.py TIP=(108,108) on
 # a 150x150 canvas, scaled by PTR_W/150.
@@ -42,7 +42,7 @@ TIP_Y = round(216 * PTR_H / 300, 1)
 
 BOX_COLOR = "0x24b47e"
 BOX_THICK = 6
-SLIDE_S = 0.4
+SLIDE_S = 0.7
 # how far inside the box's top-left corner the arrow tip lands
 INSET_FRAC = 0.14
 
@@ -89,10 +89,15 @@ def build_axis_expr(values, starts, key):
     def seg_val(i):
         v = round(values[i][key], 1)
         if i == 0:
-            return f"{v}"
+            return f"{v}+(3*sin(1.7*t))"
         prev = round(values[i - 1][key], 1)
         s = starts[i]
-        return f"if(lt(t,{s}+{SLIDE_S}),{prev}+({v}-{prev})*(t-{s})/{SLIDE_S},{v})"
+        # smoothstep ease over SLIDE_S, then a slow 3px idle drift so the cursor never sits
+        # perfectly still (a human hand never does), with a small overshoot-free settle.
+        u = f"((t-{s})/{SLIDE_S})"
+        ease = f"({u}*{u}*(3-2*{u}))"
+        drift = f"(3*sin(1.7*(t-{s})+{i}))"
+        return f"if(lt(t,{s}+{SLIDE_S}),{prev}+({v}-{prev})*{ease},{v}+{drift})"
 
     expr = f"{round(values[n - 1][key], 1)}" if n == 1 else seg_val(n - 1)
     for i in range(n - 2, -1, -1):

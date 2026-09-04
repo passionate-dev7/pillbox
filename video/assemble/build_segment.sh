@@ -54,8 +54,8 @@ OUT="$SEG_DIR/${id}.mp4"
 # --- generate the end-card slide on demand -------------------------------
 if [ "$vtype" = "slide" ] && [ "$id" = "end" ] && [ ! -f "$vpath" ]; then
   python3 "$MAKE_SLIDE" "$vpath" \
-    "Pill Round|#0A0A0A|76" \
-    "pill-round-pink.vercel.app|#0A0A0A|40" \
+    "Pillbox|#0A0A0A|76" \
+    "pillbox-care.vercel.app|#0A0A0A|40" \
     --bg "#ffffff" --width 1920 --height 1080 --line-height 110
 fi
 

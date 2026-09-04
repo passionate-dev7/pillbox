@@ -1,4 +1,4 @@
-// Builds data/index.json (Pill Round's owned asset) from openFDA, keyless:
+// Builds data/index.json (Pillbox's owned asset) from openFDA, keyless:
 //   1. Drug labels https://api.fda.gov/drug/label.json (drug_interactions, warnings,
 //      boxed_warning, contraindications, geriatric_use, dosage_and_administration, openfda.*)
 //   2. Enforcement (recalls) https://api.fda.gov/drug/enforcement.json
@@ -98,7 +98,7 @@ function curlGet(url: string): { status: number; body: string } {
   try {
     const out = execFileSync(
       "curl",
-      ["-s", "-m", "20", "-w", "\n__STATUS__%{http_code}", "-A", "pill-round-index-builder/1.0", url],
+      ["-s", "-m", "20", "-w", "\n__STATUS__%{http_code}", "-A", "pillbox-index-builder/1.0", url],
       { encoding: "utf8", maxBuffer: 1024 * 1024 * 20 }
     );
     const idx = out.lastIndexOf("\n__STATUS__");

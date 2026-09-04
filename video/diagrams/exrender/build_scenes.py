@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the three .excalidraw scenes for the Pill Round demo video.
+"""Generate the three .excalidraw scenes for the Pillbox demo video.
 Palette from this repo's DESIGN.md (Supabase-adapted: white/near-black/emerald).
 A transparent 1920x1080 frame element makes the export bbox exactly 16:9 so
 exportToBlob at 1920x1080 scale 1 is pixel-for-pixel."""
@@ -155,7 +155,7 @@ def scene_pipeline():
 def scene_two():
     el=[frame(),eyebrow("PILL ROUND  /  TWO AGENTS, ONE PAGE")]
     el.append(rect(560,102,800,66,stroke=HAIR,strokeWidth=2))
-    el.append(text("pill-round.vercel.app / t / <case>",960,120,26,INK))
+    el.append(text("pillbox-care.vercel.app / t / <case>",960,120,26,INK))
     def window(x,title,sub,tools,gone,cx):
         o=[rect(x,232,700,556,stroke=INK,strokeWidth=3)]
         o.append(line(x,314,x+700,314,stroke=INK,strokeWidth=2))
@@ -195,7 +195,7 @@ def main():
     for name,fn in SCENES.items():
         _n[0]=0
         scene={"type":"excalidraw","version":2,
-          "source":"pill-round/video/diagrams/exrender/build_scenes.py",
+          "source":"pillbox/video/diagrams/exrender/build_scenes.py",
           "elements":fn(),
           "appState":{"gridSize":None,"viewBackgroundColor":CANVAS,"exportBackground":True,
             "exportWithDarkMode":False,"exportEmbedScene":False,"exportScale":1},

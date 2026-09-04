@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * Pill Round reads as a modern clinical app: white body, near-black ink, one emerald
+ * Pillbox reads as a modern clinical app: white body, near-black ink, one emerald
  * primary, and a single dark header band per round. Every colour here is a meaning: a
  * clinical severity tier or the fact that a role is a caregiver vs a pharmacist.
  * Nothing is decoration.

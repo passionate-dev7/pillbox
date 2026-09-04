@@ -1,9 +1,9 @@
 ---
 version: alpha
-name: Pill-Round-design-system
+name: Pillbox-design-system
 description: A modern clinical app, not a printout. White canvas, near-black ink, one emerald primary, a dark contrast header band that carries the patient label and role chip. Humanist sans (Manrope) for display and body, monospace (JetBrains Mono) for doses, times, and set_ids. Medication rows are soft-radius cards with a left status stripe; flags are bordered callouts with a severity pill and a quiet mono FDA sentence; the round card is a clean time-of-day grid. Adapted from the Supabase design language (docs/DESIGN-SOURCE-supabase.md): white/near-black/emerald, not paper/ink/teal, and not white-broadsheet/serif.
 structure_source: "Structure adapted from docs/DESIGN-SOURCE-supabase.md, itself sourced from Vercel DESIGN.md / awesome-design-md conventions."
-research_source: "Tokens adapted from the Supabase visual language captured in docs/DESIGN-SOURCE-supabase.md. Branding not copied: no Supabase wordmark, no Circular font. Domain severity colors (boxed/warning/reliable) are Pill Round's own, chosen for AA contrast on white."
+research_source: "Tokens adapted from the Supabase visual language captured in docs/DESIGN-SOURCE-supabase.md. Branding not copied: no Supabase wordmark, no Circular font. Domain severity colors (boxed/warning/reliable) are Pillbox's own, chosen for AA contrast on white."
 
 colors:
   primary: "#3ecf8e"
@@ -106,7 +106,7 @@ shadow:
 
 ## Overview
 
-Pill Round reads as a modern clinical app: a white body, near-black ink, and a single emerald
+Pillbox reads as a modern clinical app: a white body, near-black ink, and a single emerald
 event color. The one deliberate departure from an all-white page is a **dark contrast band**
 (`{colors.canvas-night}` `#1c1c1c`) at the top of every round, carrying the patient label and the
 current role as an emerald chip. That band is the app's signature: it says "you are inside a

@@ -1,6 +1,6 @@
 import http.server, os, socketserver
 ROOT="/tmp/exrender-pillround"
-OUT="/Users/kamal/Desktop/devpost/projects/webmcp/pill-round/video/diagrams"
+OUT="/Users/kamal/Desktop/devpost/projects/webmcp/pillbox/video/diagrams"
 class H(http.server.SimpleHTTPRequestHandler):
     def __init__(self,*a,**k): super().__init__(*a,directory=ROOT,**k)
     def do_POST(self):

@@ -1,0 +1,2 @@
+file '/Users/kamal/Desktop/devpost/projects/webmcp/video/assemble/segments/3b_seg0.mp4'
+file '/Users/kamal/Desktop/devpost/projects/webmcp/video/assemble/segments/3b_seg1.mp4'

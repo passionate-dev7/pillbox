@@ -2,7 +2,7 @@
 0	video	clips/0_teaser.mp4	none	-	1.8	0	
 1	image	diagrams/problem.png	none	narration/line1.wav	7.720000	0.4	My dad is seventy-eight. He takes eleven prescriptions from four doctors, and I manage all of it from another city with a hand-written grid.
 2	image	diagrams/problem.png	none	narration/line2.wav	5.310000	0.4	Last week a fifth doctor started him on ciprofloxacin. Nobody checked it against the warfarin.
-3	image	diagrams/two-sessions.png	kenburns	narration/line3.wav	8.040000	0.4	Pill Round is a shared medication list for a caregiver and a pharmacist. Each gets an agent on the same page, with different tools.
+3	image	diagrams/two-sessions.png	kenburns	narration/line3.wav	8.040000	0.4	Pillbox is a shared medication list for a caregiver and a pharmacist. Each gets an agent on the same page, with different tools.
 4	image	diagrams/pipeline.png	none	narration/line4.wav	15.960000	0.4	Every flag it raises carries the exact sentence from the FDA label that caused it, with the label's set ID. The data is openFDA: sixty-four common geriatric drugs, about a thousand interaction sentences, pulled live with the query URL kept beside every number.
 5	video	clips/5.mp4	none	narration/line5.wav	10.760000	0.4	Here is the caregiver's window. I tell the agent: he started ciprofloxacin yesterday. It calls check interactions with add ciprofloxacin, before the drug is even on the list.
 6	video	clips/6.mp4	none	narration/line6.wav	8.960000	0.4	Two rows go red. Warfarin. Here's the sentence, verbatim, from the warfarin label, and the set ID that takes you to it. Nothing here is paraphrased.
@@ -12,5 +12,5 @@
 10	video	clips/10.mp4	none	narration/line10.wav	5.710000	0.4	The side effect report is a declarative WebMCP form. The agent fills it. A human presses Send.
 11	video	clips/11.mp4	none	narration/line11.wav	5.810000	0.4	And the round card prints: eleven medications, time of day, what's held, one page for the kitchen table.
 12	image	diagrams/two-sessions.png	kenburns	narration/line12.wav	13.320000	0.4	It's not a diagnosis. It's the label, in the room, for discussion with a pharmacist, when two people need it. Only the caregiver accepts, only the pharmacist proposes, and the page itself declares what each agent can do.
-13	video	clips/13.mp4	none	narration/line13.wav	1.800000	0.4	That's Pill Round.
+13	video	clips/13.mp4	none	narration/line13.wav	1.800000	0.4	That's Pillbox.
 end	slide	assemble/slides/endcard.png	none	-	1.6	0	

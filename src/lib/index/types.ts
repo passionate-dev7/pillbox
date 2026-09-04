@@ -1,4 +1,4 @@
-/** Data layer types for Pill Round's openFDA-derived index. See docs/BUILD-CONTRACT.md. */
+/** Data layer types for Pillbox's openFDA-derived index. See docs/BUILD-CONTRACT.md. */
 import type { SourceRef } from "@/lib/types";
 
 export type { SourceRef };

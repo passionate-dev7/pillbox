@@ -1,5 +1,5 @@
 /**
- * Data layer for Pill Round: loads data/index.json (built by scripts/build-index.ts from
+ * Data layer for Pillbox: loads data/index.json (built by scripts/build-index.ts from
  * openFDA labels + enforcement) and exposes the query API defined in docs/BUILD-CONTRACT.md.
  */
 import indexData from "../../../data/index.json";

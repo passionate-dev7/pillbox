@@ -1,24 +1,23 @@
 #!/usr/bin/env python3
-"""Big bold pointer arrow for diagram overlays. Straight thick shaft, large head,
-fill colour from argv[1] (hex), white outline. Tail upper-left, tip lower-right.
-Tip is at (216,216) on a 300x300 canvas (same 0.72 ratio the cue filter expects)."""
-import sys, math
-from PIL import Image, ImageDraw
+"""macOS-style arrow cursor sprite, 300x300 canvas, tip at (216,216) so the existing cue_filter
+tip math (0.72 ratio) still lands the hotspot on the target. Black fill, white outline, soft drop
+shadow. Big enough to read at 1080p."""
+import sys
+from PIL import Image, ImageDraw, ImageFilter
 SS=4; C=300*SS
-FILL=tuple(int(sys.argv[1].lstrip('#')[i:i+2],16) for i in (0,2,4))+(255,)
-OUT=(255,255,255,255)
-TAIL=(40,40); TIP=(216,216)
-ang=math.atan2(TIP[1]-TAIL[1],TIP[0]-TAIL[0])
-def pt(p,d,a): return (p[0]+d*math.cos(a),p[1]+d*math.sin(a))
-head_len=88; head_half=52; shaft_half=17
-base=pt(TIP,-head_len,ang)
-left=pt(base,head_half,ang-math.pi/2); right=pt(base,head_half,ang+math.pi/2)
-sl=pt(base,shaft_half,ang-math.pi/2); sr=pt(base,shaft_half,ang+math.pi/2)
-tl=pt(TAIL,shaft_half,ang-math.pi/2); tr=pt(TAIL,shaft_half,ang+math.pi/2)
-poly=[TIP,left,sl,tl,tr,sr,right]
-img=Image.new("RGBA",(C,C),(0,0,0,0)); d=ImageDraw.Draw(img)
-S=lambda ps:[(x*SS,y*SS) for x,y in ps]
-d.polygon(S(poly),fill=OUT,outline=OUT,width=8*SS)
-d.line(S(poly+[TIP]),fill=OUT,width=8*SS,joint="curve")
-d.polygon(S(poly),fill=FILL)
-img.resize((300,300),Image.LANCZOS).save(sys.argv[2]); print("wrote",sys.argv[2])
+# classic arrow cursor outline in a 0..1 unit box (tip at 0,0), from the standard macOS shape
+pts=[(0,0),(0,0.80),(0.19,0.64),(0.31,0.94),(0.44,0.89),(0.32,0.60),(0.56,0.60)]
+size=150.0  # px of the unit box in the 300 canvas
+tip=(216,216); off=(tip[0]-0,tip[1]-0)
+# we want the tip at (216,216) and the body extending up-left: flip both axes
+poly=[(tip[0]-x*size, tip[1]-y*size) for x,y in pts]
+img=Image.new("RGBA",(C,C),(0,0,0,0))
+sh=Image.new("RGBA",(C,C),(0,0,0,0)); d=ImageDraw.Draw(sh)
+d.polygon([(x*SS+6*SS,y*SS+8*SS) for x,y in poly],fill=(0,0,0,110))
+sh=sh.filter(ImageFilter.GaussianBlur(10*SS))
+img.alpha_composite(sh)
+d=ImageDraw.Draw(img)
+d.polygon([(x*SS,y*SS) for x,y in poly],fill=(255,255,255,255),outline=(255,255,255,255),width=9*SS)
+d.line([(x*SS,y*SS) for x,y in poly+[poly[0]]],fill=(255,255,255,255),width=9*SS,joint="curve")
+d.polygon([(x*SS,y*SS) for x,y in poly],fill=(17,17,17,255))
+img.resize((300,300),Image.LANCZOS).save(sys.argv[1]); print("wrote",sys.argv[1])

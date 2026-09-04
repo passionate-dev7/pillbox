@@ -3,7 +3,7 @@ import { CreateCase } from "@/components/case/CreateCase";
 import { Footer } from "@/components/ui/Footer";
 
 export const metadata: Metadata = {
-  title: "Pill Round",
+  title: "Pillbox",
 };
 
 export default function Home() {
@@ -12,7 +12,7 @@ export default function Home() {
       <div className="border-b border-hair-strong bg-canvas-night text-on-dark">
         <div className="mx-auto w-full max-w-[1120px] px-4 py-10 sm:px-8">
           <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2">
-            <h1 className="plate text-[clamp(2rem,5vw,3rem)] text-balance">Pill Round</h1>
+            <h1 className="plate text-[clamp(2rem,5vw,3rem)] text-balance">Pillbox</h1>
             <span className="inline-flex items-center rounded-full bg-primary px-2.5 py-0.5 text-[0.6875rem] font-bold uppercase tracking-[0.06em] text-on-primary">
               caregiver &amp; pharmacist
             </span>

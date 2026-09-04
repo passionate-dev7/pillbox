@@ -6,7 +6,7 @@ Paste-ready. Field names match the Devpost submission form for The WebMCP Challe
 
 ## Project name
 
-Pill Round
+Pillbox
 
 ## Tagline (under 100 characters)
 
@@ -16,8 +16,8 @@ A caregiver and a pharmacist each get an agent on one medication list, every fla
 
 ## Links
 
-- Live: https://pill-round-pink.vercel.app
-- Repo: https://github.com/passionate-dev7/pill-round (MIT)
+- Live: https://pillbox-care.vercel.app
+- Repo: https://github.com/passionate-dev7/pillbox (MIT)
 
 ---
 
@@ -96,7 +96,7 @@ Vitest, openFDA (drug label, NDC directory, drug enforcement).
 ## Testing instructions (submission field)
 
 No login, no API key, no setup. Chrome 149 or later with WebMCP turned on at
-`chrome://flags/#enable-webmcp-testing`. Open https://pill-round-pink.vercel.app.
+`chrome://flags/#enable-webmcp-testing`. Open https://pillbox-care.vercel.app.
 
 1. **Create the demo list.** Press "Load the demo list (SIMULATED)": Dad, 78, eleven medications
    from four prescribers. Create. You are the caregiver. The Flags panel already shows the

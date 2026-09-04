@@ -1,4 +1,4 @@
-# Pill Round
+# Pillbox
 
 A daughter in Denver manages her father's eleven prescriptions from four prescribers off one
 hand-written grid on the fridge. She is not a pharmacist. Neither is he. Every refill, every new
@@ -11,7 +11,7 @@ why, then phones the pharmacy and waits. After: one `check_interactions` call wi
 `set_id`, before the drug is on the list, and the pharmacist's proposal and her acceptance happen
 on the same page with the label text in front of both of them. Estimate, not measured.
 
-Pill Round is a shared medication round card for exactly that situation: one patient, a
+Pillbox is a shared medication round card for exactly that situation: one patient, a
 caregiver, and a pharmacist, each opening the same round from a different link, each getting a
 different set of WebMCP tools on the same page. The caregiver's agent can add medications and
 check them against openFDA label data; the pharmacist's agent can propose a hold, a dose change,
